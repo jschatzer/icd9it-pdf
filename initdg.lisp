@@ -3,7 +3,7 @@
 ;------------
 ;W 1  pdf-to-pages
 ;------------
-(o:p *chapters*
+(defparameter *chapters*
      '((20 '(1 . 421))
        (1 '(1 . 36))   (4 '(77 . 84))    (7 '(139 . 158))  (10 '(189 . 204))  (13 '(251 . 272))  (16 '(301 . 314))
        (2 '(37 . 64))  (5 '(85 . 102))   (8 '(159 . 168))  (11 '(205 . 242))  (14 '(273 . 288))  (17 '(315 . 394))
@@ -12,13 +12,13 @@
 ;------------
 ;W 2  pages-to-column
 ;------------
-(o:p *tagged-entries* '("365.1 Glaucoma" "743.5 Anomalie" "V15.1 Anamnesi" "098.4 Infezione" "239.3 Tumori" "304.1 Dipendenza" "360.2 Malattie" "379.2 Malattie" "380.2 Altre" "673.1 Embolia" "813.2 Frattura" "839.1 Lussazione" "692.4 Dermatite"))
+(defparameter *tagged-entries* '("365.1 Glaucoma" "743.5 Anomalie" "V15.1 Anamnesi" "098.4 Infezione" "239.3 Tumori" "304.1 Dipendenza" "360.2 Malattie" "379.2 Malattie" "380.2 Altre" "673.1 Embolia" "813.2 Frattura" "839.1 Lussazione" "692.4 Dermatite"))
 
 ;------------
 ;W 3  column-to-items
 ;------------
 ;keyword wegen eql :h2 in tag-item
-(o:p *tag-re*
+(defparameter *tag-re*
      '((c5 "^\\s{0,15}([\\dV]\\d\\d\\.\\d\\d\\s+\\w)")   ; in 300.22 soll 300.21 nicht erfaßt werden, hat 17 spaces; 645.10 hat 13 spaces
        (ch4 "^\\s{0,12}([\\dV]\\d\\d\\.\\d\\s+\\w)")   ; siehe 151.5, 291.3 hat 6 spaces, 012.0 hat 12 spaces, als einiges
        ;(:ch4 "^\\s{0,8}([\\dV]\\d\\d\\.\\d\\s+\\w)")   ; siehe 151.5, 291.3 hat 6 spaces, 012.0 hat 12 spaces, als einiges, einige (3) keys in comments haben 9 spaces, 3.11.13
@@ -26,7 +26,7 @@
        (:h2 "^\\s*([A-Z\\s,']+?) (\\([\\dV]\\d\\d-[\\dV]\\d\\d\\))") ; commas in en 140-149  <----  use this and ONLY THIS as keyword, wird in if statement gebraucht, tag-item in icd.lispt <----
        (h1 "^\\s*(\\d{1,2}\\. [A-Z\\s,']+? \\([\\dV]\\d\\d-[\\dV]\\d\\d\\))\\s*$")))  ; für h1 Vcodes angepasst
 
-(o:p *column-edits* '( 
+(defparameter *column-edits* '( 
   ;      9           + 4 = 13 spaces, ch4 werden bis 12 spaces erfasst
   ("(\\s{9}574.3)" . "    \\1")
   ("(\\s{9}574.4)" . "    \\1")
@@ -62,9 +62,9 @@
 ;------------
 ;W 5  complete-entries
 ;------------
-(o:p *c* '(0 1))
+(defparameter *c* '(0 1))
 
-(o:p *new-codes* 
+(defparameter *new-codes* 
 '("531.0" "531.1" "531.2" "531.3" "531.4" "531.5" "531.6" "531.7" "531.9" 
   "532.0" "532.1" "532.2" "532.3" "532.4" "532.5" "532.6" "532.7" "532.9" 
   "533.0" "533.1" "533.2" "533.3" "533.4" "533.5" "533.6" "533.7" "533.9" 
@@ -76,7 +76,7 @@
 ;------------
 ;format noch zu testen
 ;bars gehen nicht gut, ev mit tabs zu testen wegen distorsion
-(o:p *grkl* '(
+(defparameter *grkl* '(
 ;
 ("674.3" . "
 Ematoma   > 
@@ -100,7 +100,7 @@ Escl.:   lesioni da strumenti da parto (664.0-665.9)")
 ;vorerst alle 3 belassen
 ; 1) alist
 ;if car match, rm cdr from text
-(o:p *longcode* '(
+(defparameter *longcode* '(
 ;chapt11
 ("634.0" ."Aborto spontaneo complicato da infezione del tratto genitale e pelvico, ") ; siehe comma <--
 ("634.1" . "Aborto spontaneo complicato da emorragia tardiva o eccessiva, ")
@@ -108,14 +108,14 @@ Escl.:   lesioni da strumenti da parto (664.0-665.9)")
 ))
 
 ;2) level1 keys
-(o:p *l1keys* '("640.0" "640.8" "641.0" "641.1"))
+(defparameter *l1keys* '("640.0" "640.8" "641.0" "641.1"))
 ;3) level2 keys
-(o:p *l2keys* '("634" 
+(defparameter *l2keys* '("634" 
 "800" "801" "802" "804"
 ))
 
-(o:p *l1keys* '())
-;(o:p *l2keys* '())
+(defparameter *l1keys* '())
+;(defparameter *l2keys* '())
 
 ;ch11
 ;"635" "636" "637" "638" "642" "643" "644" "645" "646" "647" "648" 
@@ -130,7 +130,7 @@ Escl.:   lesioni da strumenti da parto (664.0-665.9)")
 ;------------
 ;W 4 mark-comments    ... last, because of long man-ht
 ;------------
-(o:p *edit-official-code* '(  ; there are no " quotes as in interventi
+(defparameter *edit-official-code* '(  ; there are no " quotes as in interventi
 ("’" . "'") 
 (",(?! )" . ", ") ; insert space after comma, ABORTO,EPISODIO
 ;chapter 1 ;ungemein viele unnütze editierungen!! 27.10.13
@@ -155,7 +155,7 @@ Escl.:   lesioni da strumenti da parto (664.0-665.9)")
 ("(290.10 DEMENZA PRESENILE, NON)" . "\\1 complicata")
 ))
 
-(o:p *man-ht* '(
+(defparameter *man-ht* '(
 "1. MALATTIE INFETTIVE E PARASSITARIE (001-139)"
 "(001-009) MALATTIE INFETTIVE INTESTINALI"
 "003 Altre infezioni da Salmonella"
@@ -2273,7 +2273,7 @@ Escl.:   lesioni da strumenti da parto (664.0-665.9)")
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 #|
 ;;; simplify
-(o:p *longcode-s* '("75.5")) ;simple list of keys
+(defparameter *longcode-s* '("75.5")) ;simple list of keys
 
 ;mit maplist
 ;unf setf überlegn, könnte gehen

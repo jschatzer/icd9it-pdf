@@ -21,7 +21,8 @@
   (let ((strg (if (= 20 chapter) 
                 (pdf-to-items chapter)
                 (pdf-to-items-t chapter))))
-    (create-perlarry-file strg "~/src/lisp/icd9it-pdf/Data/dataInterventi")))
+;    (create-perlarry-file strg "~/src/lisp/icd9it-pdf/Data/dataInterventi")))
+    (create-perlarry-file strg "~/src/lisp/icd9it-pdf/Data/dataInterventi_3")))    ; -----<------------
 
 (defun pdf-to-items (&optional (chapter 20))
   (insert-path ;W7
@@ -48,7 +49,7 @@
 ;WORKFLOW 2 pages-to-column
 ;------------
 (defun pages-to-column (lst)
-   (o:lststg (o:aftl (#'split-page #'edit-single-page #'edit-single-page2 #'pad-text) lst)))
+   (stdutils:list-to-delimited-string (o:aftl (#'split-page #'edit-single-page #'edit-single-page2 #'pad-text) lst)))
 
 (defun edit-single-page (page)
   (edit-single-page-helper page *tagged-entries*))
@@ -56,7 +57,7 @@
 ;zusätzliche edits
 (defun edit-single-page2 (page)
   "reduce spaces between key and text, to enable page-splitting"
-  (funcall (o:compose #'c85) page))
+  (funcall (stdutils:compose #'c85) page))
 
 (defun c85 (strg)
   (ppcre:regex-replace "985 (Interventi sulla mammella)" strg "85 \\1"))
@@ -91,11 +92,11 @@
 (defun manbar (item)
   (bar-h item man-ht #'defmanbar))
 
-(o:p off-ht (make-hash-table :test #'equal) "official-code-ht")
-(o:string-l (o:afts (o:re-fns *edit-official-code*) (o:file "~/Programming/Projects/IcdIt2007/icd9cm_24Interventi.csv"))
+(defparameter off-ht (make-hash-table :test #'equal) "official-code-ht")
+(o:string-l (o:afts (o:re-fns *edit-official-code*) (stdutils:slurp-file "~/Programming/Projects/IcdIt2007/icd9cm_24Interventi.csv"))
   (setf (gethash (o:key o:it) off-ht) o:it))
 
-(o:p man-ht (make-hash-table :test #'equal) "manual-bar-ht")
+(defparameter man-ht (make-hash-table :test #'equal) "manual-bar-ht")
 (load-ht man-ht *man-ht*)
 
 ;------------
@@ -120,7 +121,7 @@
 ;;WORKFLOW 7 insert-path
 ;------------
 (defun insert-path (lst)
-  (funcall (o:compose #'insert-h1 #'insert-key) lst))
+  (funcall (stdutils:compose #'insert-h1 #'insert-key) lst))
 
 ;------------
 ;WORKFLOW 8 create-perlarry-file

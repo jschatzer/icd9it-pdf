@@ -4,7 +4,7 @@
 ;------------
 ; UTILITIES
 ;------------
-(o:p *rlb* 
+(defparameter *rlb* 
      '(("(?<!\\d)-\\n\\s*" . "")
        ("(?<!-)\\n\\s*" . " ")))
 
@@ -12,7 +12,7 @@
 ;W 3  column-to-items
 ;------------
 ; reverse damit die Reihenfolge der edits stimmt!
-(o:p *opt-txt* 
+(defparameter *opt-txt* 
      (reverse
        '(("'" . "") ; FIRST remove all single quotes, werden nur für accented char gebraucht
          ;--------------------------------------------------------
@@ -26,17 +26,17 @@
          ("\\|\\s*'" . "ì")
          ("\\^" . "-"))))
 
-(o:p *rm-ts-el* '(("\\s*$" . "") ("^\\s*\\n" . "")) "remove trailing space and emtpy lines")
+(defparameter *rm-ts-el* '(("\\s*$" . "") ("^\\s*\\n" . "")) "remove trailing space and emtpy lines")
 
 ;------------
 ;W 4 mark-comments
 ;------------
-(o:p *ac* '((#\a . #\À) (#\o . #\Ò) (#\i . #\Ì) (#\u . #\Ù) (#\e . #\È) (#\e . #\É)))
+(defparameter *ac* '((#\a . #\À) (#\o . #\Ò) (#\i . #\Ì) (#\u . #\Ù) (#\e . #\È) (#\e . #\É)))
 
 ;------------
 ;W 6 tune-items
 ;------------
-(o:p *acc-chrs* '(
+(defparameter *acc-chrs* '(
   ;1) ¤
   ;">perche< >e< conosciuto il punto di origine, >cioe< la punta" in comments tumori
   ;("è  wie ??")  ; ev subst single found locations  <---
@@ -74,7 +74,7 @@
 ;W 7 insert-path
 ;------------
 ;bug?? (icd::insert-key '("12.34 test"))  --> "123.4|12.34 test"  <---????
-(o:p *re-ikey* '(
+(defparameter *re-ikey* '(
   ("^(\\d{2,3}\\.\\d)(\\d)$" . "\\1.\\2") ; transform [0]12.34 to [0]12.3.4 - geht für dg u th
   ("^(\\d{2,3}\\.?\\d?)$" . "\\1") ; 12 123 12.3 123.4 --> to itself                          
   ("^.(...)-(...).$" . "\\1\\2") ; (123-456)  --> 123456                                      

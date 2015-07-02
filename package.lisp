@@ -4,6 +4,8 @@
 (defpackage icd
   (:use #:cl)
   (:export 
+   ;UTILITIES
+   key
    ;W1
    #:pdf-to-pages
    ;W2
@@ -50,6 +52,6 @@
   (:use #:cl #:icd)
   (:export #:icd-dg-th))
 
-(defpackage #:icd9tests
+#;(defpackage #:icd9tests
   (:use #:cl #:icd))
 

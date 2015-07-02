@@ -16,6 +16,8 @@
 ;                            "~/Programming/Projects/IcdIt2007/dataDgTh1"))
                             "~/src/lisp/icd9it-pdf/Data/dataDgTh1"))
 
+@END
+
 ;6.11.13, diagnosi fails, interventi pass
 (o:deftest compare-sets ()
            (o:check

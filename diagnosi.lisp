@@ -15,14 +15,16 @@
   (let ((strg (if (= 20 chapter) 
                 (pdf-to-items)
                 (pdf-to-items-t chapter))))
-    (create-perlarry-file strg "~/src/lisp/icd9it-pdf/Data/dataDiagnosi")))
+;    (create-perlarry-file strg "~/src/lisp/icd9it-pdf/Data/dataDiagnosi")))
+    (create-perlarry-file strg "~/src/lisp/icd9it-pdf/Data/dataDiagnosi_1")))
+
 
 (defun items ()
   (column-to-items 
     (pages-to-column 
       (pdf-to-pages "Diagnosi.pdf" *chapters* 20))))
 
-(o:p items (o:memoize #'items))
+(defparameter items (stdutils:memoize #'items))
 
 (defun pdf-to-items ()
   (insert-path ;W7
@@ -46,7 +48,7 @@
 ;WORKFLOW 2 pages-to-column
 ;------------
 (defun pages-to-column (lst)
-  (o:lststg (o:aftl (#'split-page #'edit-single-page #'edit-single-page2 #'pad-text) lst)))
+  (stdutils:list-to-delimited-string (o:aftl (#'split-page #'edit-single-page #'edit-single-page2 #'pad-text) lst)))
 
 (defun edit-single-page (page)
   "reduce spaces between key and text, to enable page-splitting"
@@ -54,7 +56,7 @@
 
 (defun edit-single-page2 (page)
   "zusätzliche edits"
-  (funcall (o:compose #'c655.2) page))
+  (funcall (stdutils:compose #'c655.2) page))
 
 (defun c655.2 (page)
   "655.2 - im txt from pdf ist eine neue Zeile sowie ' strange char zwischen code und Beschreibung"
@@ -90,11 +92,11 @@
 (defun manbar (item)
   (bar-h item man-ht #'defmanbar))
 
-(o:p off-ht (make-hash-table :test #'equal) "official-code-ht")
-(o:string-l (o:afts (o:re-fns *edit-official-code*) (o:file "~/Programming/Projects/IcdIt2007/icd9cm_24.csv"))
-  (setf (gethash (o:key o:it) off-ht) o:it))
+(defparameter off-ht (make-hash-table :test #'equal) "official-code-ht")
+(o:string-l (o:afts (o:re-fns *edit-official-code*) (stdutils:slurp-file "~/Programming/Projects/IcdIt2007/icd9cm_24.csv"))
+  (setf (gethash (icd:key o:it) off-ht) o:it))
 
-(o:p man-ht (make-hash-table :test #'equal) "manual-bar-ht")
+(defparameter man-ht (make-hash-table :test #'equal) "manual-bar-ht")
 (load-ht man-ht *man-ht*)
 
 ;------------
@@ -126,11 +128,11 @@
           (t (ppcre:regex-replace " , " (ppcre:regex-replace (ppcre:quote-meta-chars rmtxt) item "") " ")))))
 
 (defun l1k (item)
-  (find (o:key item) *l1keys* :test #'equal))
+  (find (icd:key item) *l1keys* :test #'equal))
 
 (defun l2k (item)
   "return true if 123.4 - false if 123 or 123.45"
-  (let ((key (o:key item)))
+  (let ((key (icd:key item)))
     (and (= 5 (length key))
          (find (subseq key 0 3) *l2keys* :test #'equal))))
 
@@ -139,23 +141,23 @@
 ;------------
 ; chapt 4 u 14 haben keine h2
 (defun insert-path (lst)
-  (funcall (o:compose #'insert-h1 #'insert-h2a #'insert-h2 #'insert-key) lst))
+  (funcall (stdutils:compose #'insert-h1 #'insert-h2a #'insert-h2 #'insert-key) lst))
 
 (defun insert-h2 (lst)
   (let ((h2 ""))
     (mapcar (lambda (x)
               (o:acond ((ppcre:scan "^\\d{2}(?=\\|\\d{1,2}\\. )" x) (setf h2 "") x)  ; h2 "" brauchts  für chapt 4, das keine h2 hat !!
                        ((ppcre:scan-to-strings "^[V\\d]{6}(?=\\|)" x) (setf h2 (format nil "~a." o:it)) x) ; point hier sonst wird "04..280.0|280.0 output
-                       (t (o:stg h2 x))))
+                       (t (lol:mkstr h2 x))))
             lst)))
 
 (defun insert-h2a (lst)
   "chapt 5 hat überzähligen header, PSICOSI (290-299), 5.11.13 geht, ebenso chapt 17 fratture, ferite.
   h2a for lack of a better name, ev h2bis"
   (mapcar (lambda (x)
-            (cond ((ppcre:scan "^290294|^295299" x) (o:stg "290299." x)) ; psicosi
-                  ((ppcre:scan "^800804|^805809|^810819|^820829" x) (o:stg "800829." x))   ;fratture
-                  ((ppcre:scan "^870879|^880887|^890897" x) (o:stg "870897." x))   ;ferite
+            (cond ((ppcre:scan "^290294|^295299" x) (lol:mkstr "290299." x)) ; psicosi
+                  ((ppcre:scan "^800804|^805809|^810819|^820829" x) (lol:mkstr "800829." x))   ;fratture
+                  ((ppcre:scan "^870879|^880887|^890897" x) (lol:mkstr "870897." x))   ;ferite
                   (t x)))
           lst))
 

@@ -2,7 +2,7 @@
 ;------------
 ;W 1 pdf-to-pages
 ;------------
-(o:p *chapters* 
+(defparameter *chapters* 
      '((20 '(1 . 136))  ; vorerst 20 für alle
        (0 '(1 . 6)) (1 '(7 . 12)) (2 '(13 . 14)) (3 '(15 . 22)) (4 '(23 . 26)) (5 '(27 . 32)) (6 '(33 . 38)) (7 '(39 . 54)) (8 '(55 . 56)) 
        (9 '(57 . 74)) (10 '(75 . 80)) (11 '(81 . 84)) (12 '(85 . 90)) (13 '(91 . 92)) (14 '(93 . 112)) (15 '(113 . 118)) (16 '(119 . 136))))
@@ -10,7 +10,7 @@
 ;------------
 ;W 2 pages-to-column
 ;------------
-(o:p *tagged-entries* '("01.3 Incisione" "02.1 Trattamento" "03 Interventi" "04 Interventi" "05 Interventi" "07 Interventi" "07.6 Ipofisectomia" "08.4 Riparazione" "10 Interventi" "12 Interventi" "12.5 Interventi" "14 Interventi" "15 Interventi" "16.3 Eviscerazione" "16.9 Altri" "19 Interventi" "20.4 Mastoidectomia" "20.97 Impianto" "21.6 Turbinectomia" "27.4 Asportazione" "29 Interventi" "31.5 Asportazione" "33 Altri" "33.4 Interventi" "34.3 Asportazione" "34.9 Altri" "35.3 Interventi" "35.6 Riparazione" "35.9 Altri" "36.04 Infusione" "37 Altri" "37.3 Pericardiectomia" "37.64 Rimozione" "37.8 Inserzione" "37.91 Massaggio" "38.2 Procedure" "38.5 Legatura" "38.80 Altra" "39.3 Sutura" "39.53 Riparazione" "39.71 Impianto" "39.92 Iniezione" "41 Interventi" "41.4 Asportazione" "42.4 Asportazione" "43 Incisione" "44.3 Gastroenterostomia" "45 Incisione" "45.3 Asportazione" "46 Altri" "46.6 Fissazione" "48 Interventi" "48.7 Riparazione" "49.4 Interventi" "51 Interventi" "51.5 Altra" "52 Interventi" "53 Riparazione" "54 Altri" "54.4 Asportazione" "54.96 Iniezione" "55.3 Asportazione" "56.1 Papillotomia" "57 Interventi" "57.9 Altri" "58.4 Uretroplastiche" "59.8 Cateterizzazione" "60.4 Adenomectomia" "62 Interventi" "64 Interventi" "64.98 Altri" "65.6 Salpingo" "67 Interventi" "68 Altra" "69 Altri" "70 Interventi" "71.1 Procedure" "74 Taglio" "75.4 Rimozione" "76.5 Artroplastica" "77.1 Altra" "77.6 Asportazione" "78 Altri" "78.4 Altri" "78.8 Procedure" "79.1 Riduzione" "79.5 Riduzione" "80 Incisione" "80.4 Incisione" "81 Interventi" "81.2 Artrodesi" "81.6 Altre" "82 Interventi" "82.5 Trapianto" "83.1 Sezione" "84 Altri" "84.2 Reimpianto" "84.62 Inserzione" "84.9 Altri" "85.4 Mastectomia" "86.02 Iniezione" "86.3 Altra" "86.8 Altra" "86.97 Inserzione" "87.3 Radiografia" "88.2 Radiografia" "88.6 Flebografia" "89 Anamnesi" "89.4 Test" "90 Esame" "92.2 Radiologia" "93.3 Altre" "93.8 Altra" "94.3 Psicoterapia" "96 Intubazioni" "96.4 Irrigazione" "97 Sostituzione" "98 Rimozione" "99 Altre" "99.3 Vaccinazioni" "99.6 Cardioversione" "99.9 Altre"))
+(defparameter *tagged-entries* '("01.3 Incisione" "02.1 Trattamento" "03 Interventi" "04 Interventi" "05 Interventi" "07 Interventi" "07.6 Ipofisectomia" "08.4 Riparazione" "10 Interventi" "12 Interventi" "12.5 Interventi" "14 Interventi" "15 Interventi" "16.3 Eviscerazione" "16.9 Altri" "19 Interventi" "20.4 Mastoidectomia" "20.97 Impianto" "21.6 Turbinectomia" "27.4 Asportazione" "29 Interventi" "31.5 Asportazione" "33 Altri" "33.4 Interventi" "34.3 Asportazione" "34.9 Altri" "35.3 Interventi" "35.6 Riparazione" "35.9 Altri" "36.04 Infusione" "37 Altri" "37.3 Pericardiectomia" "37.64 Rimozione" "37.8 Inserzione" "37.91 Massaggio" "38.2 Procedure" "38.5 Legatura" "38.80 Altra" "39.3 Sutura" "39.53 Riparazione" "39.71 Impianto" "39.92 Iniezione" "41 Interventi" "41.4 Asportazione" "42.4 Asportazione" "43 Incisione" "44.3 Gastroenterostomia" "45 Incisione" "45.3 Asportazione" "46 Altri" "46.6 Fissazione" "48 Interventi" "48.7 Riparazione" "49.4 Interventi" "51 Interventi" "51.5 Altra" "52 Interventi" "53 Riparazione" "54 Altri" "54.4 Asportazione" "54.96 Iniezione" "55.3 Asportazione" "56.1 Papillotomia" "57 Interventi" "57.9 Altri" "58.4 Uretroplastiche" "59.8 Cateterizzazione" "60.4 Adenomectomia" "62 Interventi" "64 Interventi" "64.98 Altri" "65.6 Salpingo" "67 Interventi" "68 Altra" "69 Altri" "70 Interventi" "71.1 Procedure" "74 Taglio" "75.4 Rimozione" "76.5 Artroplastica" "77.1 Altra" "77.6 Asportazione" "78 Altri" "78.4 Altri" "78.8 Procedure" "79.1 Riduzione" "79.5 Riduzione" "80 Incisione" "80.4 Incisione" "81 Interventi" "81.2 Artrodesi" "81.6 Altre" "82 Interventi" "82.5 Trapianto" "83.1 Sezione" "84 Altri" "84.2 Reimpianto" "84.62 Inserzione" "84.9 Altri" "85.4 Mastectomia" "86.02 Iniezione" "86.3 Altra" "86.8 Altra" "86.97 Inserzione" "87.3 Radiografia" "88.2 Radiografia" "88.6 Flebografia" "89 Anamnesi" "89.4 Test" "90 Esame" "92.2 Radiologia" "93.3 Altre" "93.8 Altra" "94.3 Psicoterapia" "96 Intubazioni" "96.4 Irrigazione" "97 Sostituzione" "98 Rimozione" "99 Altre" "99.3 Vaccinazioni" "99.6 Cardioversione" "99.9 Altre"))
 
 ;------------
 ;W 3 column-to-items
@@ -20,7 +20,7 @@
 ;in 36.1  darf 00.43 con i codici ... nicht erfasst werden, hat nur 10 spaces!! <--
 ;in 81.6  darf 81.64 ... nicht erfasst werden, hat nur 9 spaced, --> add 6 spaces <---
 ; 72.21 hat 14 spaces!
-(o:p *tag-re*
+(defparameter *tag-re*
   '((h1  "^\\s*(\\d{1,2}\\. [A-Z\\s,'(\\d)-]+?)")  ; 2. TUMORI (140 - 239) <-- space before and after -  !! geht trotzdem nicht??
     (h2  "^\\s{0,8}(\\d\\d\\s+\\w)") ; error: reference to non-existent register 2 in replacement string
     ;(h2  "^\\s{0,8}(\\d\\d\\s+\\w)()")  ;dummy empty () wegen diagnosi, 2.11.13
@@ -28,7 +28,7 @@
     (hc3 "^\\s*(\\d\\d\\.\\d\\s+\\w)")   ; siehe 151.5
     (c4  "^\\s{0,14}(\\d\\d\\.\\d\\d\\s+\\w)")))
 
-(o:p *column-edits*
+(defparameter *column-edits*
   '(  ;new codes from comments in pdf------------------------------------------
     ("(Infusione di agenti vasopressori)" . "00.17 \\1")
     ("(Imaging intravascolare di altri vasi non specifi-\\n\\s*cati)" . "00.29 \\1")
@@ -56,21 +56,21 @@
 ;------------
 ;W 5 complete-entries
 ;------------
-(o:p *c* '(1 2 3 4 5 6 9))
+(defparameter *c* '(1 2 3 4 5 6 9))
 
-(o:p *new-codes* '("90.0" "90.1" "90.2" "90.3" "90.4" "90.5" "90.6" "90.7" "90.8" "90.9"
+(defparameter *new-codes* '("90.0" "90.1" "90.2" "90.3" "90.4" "90.5" "90.6" "90.7" "90.8" "90.9"
 "91.0" "91.1" "91.2" "91.3" "91.4" "91.5" "91.6" "91.7" "91.8" "91.9"))
 
 ;------------
 ;WORKFLOW 6 tune-items
 ;------------
 ; if car match, replace string after bar with cdr
-(o:p *grkl* '(
+(defparameter *grkl* '(
 ("72.4" . "testklammer")
 ))
 
 ;if car match, rm cdr from text
-(o:p *longcode* '(
+(defparameter *longcode* '(
 ;chapt13
 ("75.5" . "Riparazione di lacerazione ostetrica recente ")  ; for testing, include space <----
 ;("72" . "Parto con forcipe")    ; test <--------------
@@ -82,11 +82,11 @@
 ;W 4 mark-comments    ... last, because of long man-ht
 ;------------
 ;populate hash table
-;(o:p *reg-lst* *alst*)
+;(defparameter *reg-lst* *alst*)
 ;diese liste muß anscheinend wegen dem macro string-l ? hier vorne sein, nach unten verschieben geht nicht! ?? 27.10.13
 ;alle dem pdf angepasst
 ; (regex . replacement)
-(o:p *edit-official-code* '(
+(defparameter *edit-official-code* '(
 ("’" . "'") 
 ;("\\"" . "")     ;"; colon for vim color, remove all double quotes
 (#"""# . "")     ;"; colon for vim color, remove all double quotes
@@ -110,7 +110,7 @@
 ("(81.55 REVISIONE DI SOSTITUZIONE DEL GINOCCHIO)" . "\\1, non altrimenti specificata")
 ))
 
-(o:p *man-ht* '(
+(defparameter *man-ht* '(
 "00.0 Terapia ad ultrasuoni"
 "00.2 Imaging intravascolare dei vasi sanguigni"
 "00.3 Chirurgia computer-assistita (CAS)"

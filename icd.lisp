@@ -3,6 +3,16 @@
 ;------------
 ; UTILITIES, ev einige ad onlips überlegen
 ;------------
+#;(defun insert-after-pos (lst index newelt)
+  "insert after position, before-position can be done with (1- pos)
+  from http://stackoverflow.com/questions/4387570/in-common-lisp-how-can-i-insert-an-element-into-a-list-in-place"
+  (push newelt (cdr (nthcdr index lst)))
+  lst)
+
+(defun key (s)
+  "return the key of an entry" ;(key "123 CodeText") ; "123"
+  (#~s'\s.*'' s))
+
 (defun key-from-bar-all (line)
   "return the key from 1.bar to space, >with< points, parenthesis and slash"
   (subseq line (1+ (position #\| line)) (position #\space line)))
@@ -38,7 +48,7 @@
 (defun pdf-to-pages (pdf lst ch)
  "convert a single or all chapters (use 20) to a list of pages"
   (let ((range (eval `(case ,ch ,@lst))))
-    (funcall (o:compose #'split-into-pages #'trim-text)
+    (funcall (stdutils:compose #'split-into-pages #'trim-text)
              (pdf-to-txt pdf (car range) (cdr range)))))
 
 (defun pdf-to-txt (pdf-file from to)
@@ -51,6 +61,12 @@
   "remove first and last line of string, with sed and head, da es mit regex nicht gelingt"
   (o:file-write "/tmp/pdf0" strg)
   (o:file-write "/tmp/pdf1" (rm-first-and-last-line-from-file "/tmp/pdf0")))
+
+#;(defun trim-text (strg)
+  "remove first and last line of string, with sed and head, da es mit regex nicht gelingt"
+  (alexandria:write-string-into-file strg "/tmp/pdf0" :IF-EXISTS :overwrite)
+  (alexandria:write-string-into-file (rm-first-and-last-line-from-file "/tmp/pdf0") "/tmp/pdf1" :IF-EXISTS :overwrite))
+
 ;helper
 (defun rm-first-and-last-line-from-file (file)
   (clesh:script (format nil "sed '1d' ~a | head -n -1" file)))
@@ -70,7 +86,7 @@
 
 (defun edit-single-page-helper (page reg-lst)
   (dolist (regex reg-lst page)
-    (o:dbind (code text) (ppcre:split "\\s+" regex :limit 2)
+    (destructuring-bind (code text) (ppcre:split "\\s+" regex :limit 2)
              (setf page (ppcre:regex-replace (format nil "(~a)\\s{3,}(~a)" code text) page  "\\1 \\2")))))
 
 (defun split-page (page &optional (width 75) (w 2))
@@ -78,9 +94,9 @@
   (do ((s (make-string-input-stream page))
        (col1 "") (ss "") (col2 ""))
     ((not (listen s)) (if (string= ss "") (return-from split-page (format nil "~a~%~a~%" col1 col2))))  ; "A~aA2A*" uppercase A removes indents
-    (o:mvbind (c1 e c2) (cl-pack:unpack (format nil "a~aA~aa*" width w) (read-line s))
-              (setf col1 (o:stg col1 #\newline c1)
-                    col2 (o:stg col2 #\newline c2)
+    (multiple-value-bind (c1 e c2) (cl-pack:unpack (format nil "a~aA~aa*" width w) (read-line s))
+              (setf col1 (lol:mkstr col1 #\newline c1)
+                    col2 (lol:mkstr col2 #\newline c2)
                     ss (concatenate 'string ss e))))
   (cond ((zerop width) (format t "Page Split not possible~%~a" page))
         (t (split-page page (1- width)))))
@@ -106,7 +122,7 @@
                          (ppcre:regex-replace-all (ppcre:create-scanner (cadr x) :multi-line-mode t) s "§\\2 \\1")
                          (ppcre:regex-replace-all (ppcre:create-scanner (cadr x) :multi-line-mode t) s "§\\1"))))
                    lst)))
-    (eval `(funcall (o:compose ,@(fns)) ,strg))))
+    (eval `(funcall (stdutils:compose ,@(fns)) ,strg))))
 
 (defun split-into-items (strg)
   "split removing the trailing newline and reducing excessive space between key and text, e.g. 40.11"
@@ -119,22 +135,22 @@
 (defun bar-h (item ht fn)
   "official hash-controlled bar insertion"
   (if (gethash (o:key item) ht)
-    (o:aif (ctrbar item (accs-to-chrs (gethash (o:key item) ht)))
+    (lol:aif (ctrbar item (accs-to-chrs (gethash (o:key item) ht)))
            o:it
       (funcall fn item))))
 
 (defun accs-to-chrs (strg)
- (eval `(funcall (o:compose ,@(s-fns *ac*)) ,strg)))
+ (eval `(funcall (stdutils:compose ,@(s-fns *ac*)) ,strg)))
 
 (defun ctrbar (strg ctrl)
   "returns a string with a bar or nil, if there is no bar in the string"
   (flet ((eoltest (line)
-           (if (< (length ctrl) (length (subseq line (position-if #'o:constituent line))))
+           (if (< (length ctrl) (length (subseq line (position-if #'stdutils:constituent line))))
              line
              (if (string-equal
-                  (subseq line (position-if #'o:constituent line))
-                  (subseq ctrl (- (length ctrl) (length (subseq line (position-if #'o:constituent line))))))
-               (o:stg line #\|)
+                  (subseq line (position-if #'stdutils:constituent line))
+                  (subseq ctrl (- (length ctrl) (length (subseq line (position-if #'stdutils:constituent line))))))
+               (lol:mkstr line #\|)
                line))))
     (let ((item (format nil "~{~&~a~}" (mapcar #'eoltest (ppcre:split "\\n" strg)))))
       (if (find #\| item) (rm-nsb item)))))
@@ -144,7 +160,7 @@
 
 (defun defoffbar (item)
     "default code bar, on end of item"
-      (rm-nsb (o:stg item #\|)))
+      (rm-nsb (lol:mkstr item #\|)))
 
 (defun defmanbar (item)
   "default header bar, on end of 1. line"
@@ -163,7 +179,7 @@
   (dolist (cod nc items)
     (let ((pos (position cod items :test #'equal :key #'o:key)))
       (dolist (n (reverse ce))
-        (setf items (o:insert-after-pos items pos (defoffbar (gethash (o:stg cod n) ht))))))))
+        (setf items (o:insert-after-pos items pos (defoffbar (gethash (lol:mkstr cod n) ht))))))))
 
 ;------------
 ;WORKFLOW 6 tune items
@@ -192,7 +208,7 @@
 ;------------
 (defun insert-key (lst)
   (mapcar (lambda (x)
-            (o:stg (k2n (o:key x)) #\| x))
+            (lol:mkstr (k2n (o:key x)) #\| x))
           lst))
 
 (defun k2n (k)
@@ -205,7 +221,7 @@
     (mapcar (lambda (x)
               ; match 01|1. text  - i.e. 2 digits, bar, 1-2 digits, period and space, (h2i does match 01| too)
               (o:acond ((ppcre:scan-to-strings "^\\d{2}(?=\\|\\d{1,2}\\. )" x) (setf h1 (format nil "~a." o:it)) x)
-                       (t (o:stg h1 x))))
+                       (t (lol:mkstr h1 x))))
             lst)))
 
 ;------------
@@ -217,12 +233,15 @@
 
 ;damit geht utf8, accented chars
 (defun create-perlarry-file-all (diagnosi interventi file)
-  (let ((dg (o:mklist "d|diagnosi|"))
-        (diag (mapcar (lambda (x) (o:stg "d." x)) diagnosi))
-        (th (o:mklist "i|interventi|"))
-        (ther (mapcar (lambda (x) (o:stg "i." x)) interventi)))
+  (let ((dg (stdutils:mklist "d|diagnosi|"))
+        (diag (mapcar (lambda (x) (lol:mkstr "d." x)) diagnosi))
+        (th (stdutils:mklist "i|interventi|"))
+        (ther (mapcar (lambda (x) (lol:mkstr "i." x)) interventi)))
     (with-open-file (strm file :direction :output :if-does-not-exist :create :if-exists :supersede)
       (format strm "use utf8;~%@icd = (~%~{~s,~%~})" (append dg diag th ther)))))
 
 @END ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;  drafts ;;;;;;;;;;;;;;;;;;;
+#;(defun key (line)
+	  "return the key of an entry" ;(key "123 CodeText") ; "123"
+	  (subseq line 0 (position #\space line)))
