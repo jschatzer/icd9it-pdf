@@ -7,9 +7,9 @@
   :author "Schatzer Johann <j.schatzer@tin.it>"
   :license "Code is free, about initfiles not shure"
     :defsystem-depends-on (:asdf-package-system)
-  :depends-on (#:onlisp #:cl-pack #:fare-utils
-               perlre stdutils 
-               )
+  :depends-on (perlre cl-pack clesh stdutils 
+;                      onlisp
+               fare-utils)
   :components ((:file "package")
                (:file "initicd")
                (:file "initdg")

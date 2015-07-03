@@ -16,7 +16,7 @@
                 (pdf-to-items)
                 (pdf-to-items-t chapter))))
 ;    (create-perlarry-file strg "~/src/lisp/icd9it-pdf/Data/dataDiagnosi")))
-    (create-perlarry-file strg "~/src/lisp/icd9it-pdf/Data/dataDiagnosi_2")))
+    (icd:create-perlarry-file strg "~/src/lisp/icd9it-pdf/data/dataDiagnosi_4")))
 
 
 (defun items ()
@@ -92,9 +92,17 @@
 (defun manbar (item)
   (bar-h item man-ht #'defmanbar))
 
+
 (defparameter off-ht (make-hash-table :test #'equal) "official-code-ht")
+
+#|
+; ORig
 (o:string-l (icd:afts (icd:re-fns *edit-official-code*) (stdutils:slurp-file "~/Programming/Projects/IcdIt2007/icd9cm_24.csv"))
   (setf (gethash (icd:key o:it) off-ht) o:it))
+|#
+
+(icd:string-l (icd:afts (icd:re-fns *edit-official-code*) (stdutils:slurp-file "~/Programming/Projects/IcdIt2007/icd9cm_24.csv"))
+  (setf (gethash (icd:key stdutils:it) off-ht) stdutils:it))
 
 (defparameter man-ht (make-hash-table :test #'equal) "manual-bar-ht")
 (load-ht man-ht *man-ht*)
@@ -166,6 +174,8 @@
 ;WORKFLOW 8 create-perlarry-file
 ;------------
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+#|
 @END ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 #;(defun insert-h2 (lst)
   (let ((h2 ""))
@@ -176,3 +186,15 @@
             lst)))
 
 
+#|
+;geht nicht ganz
+(defmacro string-l (s &body body)
+  "iterate over the lines in a string"
+  `(stdutils:do-stream-lines (l ,s) ,@body))
+
+(string-l (icd:afts (icd:re-fns *edit-official-code*) (stdutils:slurp-file "~/Programming/Projects/IcdIt2007/icd9cm_24.csv"))
+  (setf (gethash (icd:key l) off-ht) l))
+|#
+
+
+|#

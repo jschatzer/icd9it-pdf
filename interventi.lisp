@@ -13,7 +13,6 @@
                 (pdf-to-items-t chapter))))
     (create-perlarry-file strg "/tmp/i")))
 
-
 ;--------------
 ;MAIN FUNCTION
 ;--------------
@@ -22,7 +21,7 @@
                 (pdf-to-items chapter)
                 (pdf-to-items-t chapter))))
 ;    (create-perlarry-file strg "~/src/lisp/icd9it-pdf/Data/dataInterventi")))
-    (create-perlarry-file strg "~/src/lisp/icd9it-pdf/Data/dataInterventi_6")))    ; -----<------------
+    (icd:create-perlarry-file strg "~/src/lisp/icd9it-pdf/data/dataInterventi_23")))    ; -----<------------
 
 (defun pdf-to-items (&optional (chapter 20))
   (insert-path ;W7
@@ -93,8 +92,15 @@
   (bar-h item man-ht #'defmanbar))
 
 (defparameter off-ht (make-hash-table :test #'equal) "official-code-ht")
+
+#|
+;Orig
 (o:string-l (icd:afts (icd:re-fns *edit-official-code*) (stdutils:slurp-file "~/Programming/Projects/IcdIt2007/icd9cm_24Interventi.csv"))
   (setf (gethash (o:key o:it) off-ht) o:it))
+|#
+
+(icd:string-l (icd:afts (icd:re-fns *edit-official-code*) (stdutils:slurp-file "~/Programming/Projects/IcdIt2007/icd9cm_24Interventi.csv"))
+  (setf (gethash (icd:key stdutils:it) off-ht) stdutils:it))  ; it kommt von awhen2
 
 (defparameter man-ht (make-hash-table :test #'equal) "manual-bar-ht")
 (load-ht man-ht *man-ht*)
@@ -128,4 +134,20 @@
 ;------------
 
 ;;; END ;;;;;;;;;;;;;;;
+
+#|
+
+#;(defun pdf-to-items (&optional (chapter 20))
+  ;(insert-path ;W7
+    ;(tune-items  ;W6
+      ;(complete-code ;W5
+        ;(mark-comments  ;W4
+          ;(column-to-items   ;W3
+            ;(pages-to-column     ;W2
+              (pdf-to-pages "Interventi.pdf" *chapters* chapter))
+;))
+;)))) ;W1
+
+
+|#
 

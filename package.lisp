@@ -9,6 +9,7 @@
    aftl
    afts
    re-fns
+   string-l
    ;W1
    #:pdf-to-pages
    ;W2
@@ -55,6 +56,7 @@
   (:use #:cl #:icd)
   (:export #:icd-dg-th))
 
+#|
 #;(defpackage #:icd9tests
   (:use #:cl #:icd))
-
+|#

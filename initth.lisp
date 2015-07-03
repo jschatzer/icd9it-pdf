@@ -89,7 +89,10 @@
 (defparameter *edit-official-code* '(
 ("’" . "'") 
 ;("\\"" . "")     ;"; colon for vim color, remove all double quotes
-(#"""# . "")     ;"; colon for vim color, remove all double quotes
+;("\"" . "")     ;"; colon for vim color, remove all double quotes ; 3.7.15, scheint auch zu gehen
+;((lol:mkstr #\") . "")     ;"; colon for vim color, remove all double quotes
+(#\" . "")     ;remove all double quotes
+;(#"""# . "")     ;"; colon for vim color, remove all double quotes
 ("(20.71 ANASTOMOSI ENDOLINFATIC)A" . "\\1O")
 ("(27.22 BIOPSIA DELL'UGOLA)" . "\\1 E DEL PALATO MOLLE")
 ("(32.28 ASPORTAZIONE O DEMOLIZIONE ENDOSCOPICA DI LESIONE O TESSUTO) POLMONARE" . "\\1 DEL POLMONE")

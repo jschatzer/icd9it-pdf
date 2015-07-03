@@ -3,19 +3,31 @@
 ;------------
 ; UTILITIES, ev einige ad onlips überlegen
 ;------------
+;test 24.10.13
+(lol:defmacro! string-l (filename &body body)
+	"iterate over the lines in a string"
+	`(with-input-from-string (,g!str ,filename)
+		 (stdutils:awhile2 (read-line2 ,g!str)	,@body)))
+
+;helper 
+(let ((g (gensym)))
+	(defun read-line2 (&optional (str *standard-input*))
+		(let ((val (read-line str nil g)))
+			(unless (equal val g) (values val t)))))
+
 ; 10.11.13
 ; from icd9
 ;(defun afts (strg fns)
 (defun afts (fns strg)
   "for apply functions to scalar"
-    (eval `(funcall (o:compose ,@fns) ,strg)))
+    (eval `(funcall (stdutils:compose ,@fns) ,strg)))
 
 ;usage:  (icd::aftl '(1 2 3) (#'1+ #'1+))
 ;(defmacro aftl (lst fns)
 ;analog: mapcar fn lst
 (defmacro aftl (fns lst)
   "for apply functions to list"
-  `(mapcar (o:compose ,@fns) ,lst))
+  `(mapcar (stdutils:compose ,@fns) ,lst))
 
 (defun re-fns (alist &key m)
   "return a list of string-replace-functions, i.e reg expr functions,
@@ -34,10 +46,12 @@
   (push newelt (cdr (nthcdr index lst)))
   lst)
 
+#|
 ;geht anscheinend wegen #'key nicht ??, warum??
-#;(defun key (s)
+(defun key (s)
   "return the key of an entry" ;(key "123 CodeText") ; "123"
   (#~s'\s.*'' s))
+|#
 
 (defun key (line)
 	  "return the key of an entry" ;(key "123 CodeText") ; "123"
@@ -84,13 +98,14 @@
 (defun pdf-to-txt (pdf-file from to)
   "create text from Pdf from-page to-page"
   (clesh:script
-    (let ((path "~/Programming/Projects/IcdIt2007"))
+    ;(let ((path "~/Programming/Projects/IcdIt2007"))
+    (let ((path "~/src/lisp/icd9it-pdf/pdf"))
       (format nil "pdftotext -layout -eol unix -f ~a -l ~a ~a/~a -" from to path pdf-file))))
 
 (defun trim-text (strg)
   "remove first and last line of string, with sed and head, da es mit regex nicht gelingt"
-  (alexandria:write-string-into-file strg "/tmp/pdf0" :if-does-not-exist :create :if-exists :overwrite)
-  (alexandria:write-string-into-file (rm-first-and-last-line-from-file "/tmp/pdf0") "/tmp/pdf1" :if-does-not-exist :create :if-exists :overwrite))
+  (alexandria:write-string-into-file strg "/tmp/pdf0" :if-exists :supersede :if-does-not-exist :create)
+  (alexandria:write-string-into-file (rm-first-and-last-line-from-file "/tmp/pdf0") "/tmp/pdf1" :if-exists :supersede :if-does-not-exist :create))
 
 ;helper
 (defun rm-first-and-last-line-from-file (file)
@@ -161,7 +176,7 @@
   "official hash-controlled bar insertion"
   (if (gethash (key item) ht)
     (lol:aif (ctrbar item (accs-to-chrs (gethash (key item) ht)))
-           o:it
+           lol:it
       (funcall fn item))))
 
 (defun accs-to-chrs (strg)
@@ -265,6 +280,9 @@
     (with-open-file (strm file :direction :output :if-does-not-exist :create :if-exists :supersede)
       (format strm "use utf8;~%@icd = (~%~{~s,~%~})" (append dg diag th ther)))))
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;
+#|
 @END ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;  drafts ;;;;;;;;;;;;;;;;;;;
 #;#;(defun trim-text (strg)
@@ -283,4 +301,26 @@
                        (t (lol:mkstr h1 x))))
             lst)))
 
+#;(defun trim-text (strg)
+  "remove first and last line of string, with sed and head, da es mit regex nicht gelingt"
+  (o:file-write "/tmp/pdf0" strg)
+  (o:file-write "/tmp/pdf1" (rm-first-and-last-line-from-file "/tmp/pdf0")))
 
+
+
+#;(defun trim-text (strg)
+  "remove first and last line of string, with sed and head, da es mit regex nicht gelingt"
+  (alexandria:write-string-into-file strg "/tmp/pdf0" :if-does-not-exist :create :if-exists :overwrite)
+  (alexandria:write-string-into-file (rm-first-and-last-line-from-file "/tmp/pdf0") "/tmp/pdf1" :if-does-not-exist :create :if-exists :overwrite))
+
+#|
+;- - - - -
+;(defmacro! do-file-l (filename &body body)
+#;(defmacro! file-l (filename &body body)
+	"iterate over the lines in a file"
+	`(with-open-file (,g!str ,filename)
+		 (awhile2 (read-line2 ,g!str)	,@body)))
+|#
+
+
+|#
