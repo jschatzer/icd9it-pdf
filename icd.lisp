@@ -3,8 +3,6 @@
 ;------------
 ; UTILITIES, ev einige ad onlips überlegen
 ;------------
-
-#|
 ; 10.11.13
 ; from icd9
 ;(defun afts (strg fns)
@@ -29,7 +27,6 @@
                 (ppcre:regex-replace-all (ppcre:create-scanner (car alist-elt) :multi-line-mode t :single-line-mode t) strg (cdr alist-elt) :simple-calls t)
                 (ppcre:regex-replace-all (car alist-elt) strg (cdr alist-elt) :simple-calls t))))
           alist))
-|#
 
 (defun insert-after-pos (lst index newelt)
   "insert after position, before-position can be done with (1- pos)
@@ -66,7 +63,7 @@
                  (subseq entry pos))))
 
 (defun rm-linebreaks (strg)
-  (o:afts (o:re-fns *rlb*) strg))
+  (afts (re-fns *rlb*) strg))
 
 (defun edit-entries-space (lst)
   (mapcar #'edit-entry-X lst))
@@ -130,7 +127,7 @@
         (t (split-page page (1- width)))))
 
 (defun optimize-text (strg)
-  (o:afts (o:re-fns *rm-ts-el* :m t) (o:afts (o:re-fns *opt-txt*) strg)))
+  (afts (re-fns *rm-ts-el* :m t) (afts (re-fns *opt-txt*) strg)))
 
 (defun uc-header (strg)
   "remove linebreaks from upper case header"
@@ -213,7 +210,7 @@
 ;WORKFLOW 6 tune items
 ;------------
 (defun accented-chrs (item)
-  (o:afts (o:re-fns *acc-chrs*) item)) 
+  (afts (re-fns *acc-chrs*) item)) 
 
 (defun grklammer-fns (alist) 
   (mapcar (lambda (ai) ; alist-item
@@ -241,7 +238,7 @@
 
 (defun k2n (k)
   "key to node[s]"
-  (o:afts (o:re-fns *re-ikey*) k))
+  (afts (re-fns *re-ikey*) k))
 
 ;damit point idem wie h2, in h2 notwendig
 (defun insert-h1 (lst)

@@ -22,7 +22,7 @@
                 (pdf-to-items chapter)
                 (pdf-to-items-t chapter))))
 ;    (create-perlarry-file strg "~/src/lisp/icd9it-pdf/Data/dataInterventi")))
-    (create-perlarry-file strg "~/src/lisp/icd9it-pdf/Data/dataInterventi_5")))    ; -----<------------
+    (create-perlarry-file strg "~/src/lisp/icd9it-pdf/Data/dataInterventi_6")))    ; -----<------------
 
 (defun pdf-to-items (&optional (chapter 20))
   (insert-path ;W7
@@ -49,7 +49,7 @@
 ;WORKFLOW 2 pages-to-column
 ;------------
 (defun pages-to-column (lst)
-   (stdutils:list-to-delimited-string (o:aftl (#'split-page #'edit-single-page #'edit-single-page2 #'pad-text) lst)))
+   (stdutils:list-to-delimited-string (icd:aftl (#'split-page #'edit-single-page #'edit-single-page2 #'pad-text) lst)))
 
 (defun edit-single-page (page)
   (edit-single-page-helper page *tagged-entries*))
@@ -73,7 +73,7 @@
   (split-into-items (tag-items *tag-re* strg))) ;re for regular-expressions
 
 (defun edit-column (strg)
-  (o:afts (o:re-fns *column-edits*) strg))
+  (icd:afts (icd:re-fns *column-edits*) strg))
 
 ;------------
 ;WORKFLOW 4 mark comments
@@ -93,7 +93,7 @@
   (bar-h item man-ht #'defmanbar))
 
 (defparameter off-ht (make-hash-table :test #'equal) "official-code-ht")
-(o:string-l (o:afts (o:re-fns *edit-official-code*) (stdutils:slurp-file "~/Programming/Projects/IcdIt2007/icd9cm_24Interventi.csv"))
+(o:string-l (icd:afts (icd:re-fns *edit-official-code*) (stdutils:slurp-file "~/Programming/Projects/IcdIt2007/icd9cm_24Interventi.csv"))
   (setf (gethash (o:key o:it) off-ht) o:it))
 
 (defparameter man-ht (make-hash-table :test #'equal) "manual-bar-ht")
@@ -109,13 +109,13 @@
 ;WORKFLOW 6 tune items
 ;------------
 (defun tune-items (lst)
-(o:aftl (#'longcode #'grklammer #'accented-chrs) lst))
+(icd:aftl (#'longcode #'grklammer #'accented-chrs) lst))
 
 (defun grklammer (item)
-    (o:afts (grklammer-fns *grkl*) item))
+    (icd:afts (grklammer-fns *grkl*) item))
 
 (defun longcode (item)
-    (o:afts (longcode-fns *longcode*) item))
+    (icd:afts (longcode-fns *longcode*) item))
 
 ;------------
 ;;WORKFLOW 7 insert-path

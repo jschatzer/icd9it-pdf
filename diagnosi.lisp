@@ -16,7 +16,7 @@
                 (pdf-to-items)
                 (pdf-to-items-t chapter))))
 ;    (create-perlarry-file strg "~/src/lisp/icd9it-pdf/Data/dataDiagnosi")))
-    (create-perlarry-file strg "~/src/lisp/icd9it-pdf/Data/dataDiagnosi_1")))
+    (create-perlarry-file strg "~/src/lisp/icd9it-pdf/Data/dataDiagnosi_2")))
 
 
 (defun items ()
@@ -48,7 +48,7 @@
 ;WORKFLOW 2 pages-to-column
 ;------------
 (defun pages-to-column (lst)
-  (stdutils:list-to-delimited-string (o:aftl (#'split-page #'edit-single-page #'edit-single-page2 #'pad-text) lst)))
+  (stdutils:list-to-delimited-string (icd:aftl (#'split-page #'edit-single-page #'edit-single-page2 #'pad-text) lst)))
 
 (defun edit-single-page (page)
   "reduce spaces between key and text, to enable page-splitting"
@@ -73,7 +73,7 @@
   (split-into-items (tag-items *tag-re* strg))) ;re for regular-expressions
 
 (defun edit-column (strg)
-  (o:afts (o:re-fns *column-edits* :m t) strg))
+  (icd:afts (icd:re-fns *column-edits* :m t) strg))
 
 ;------------
 ;WORKFLOW 4 mark-comments
@@ -93,7 +93,7 @@
   (bar-h item man-ht #'defmanbar))
 
 (defparameter off-ht (make-hash-table :test #'equal) "official-code-ht")
-(o:string-l (o:afts (o:re-fns *edit-official-code*) (stdutils:slurp-file "~/Programming/Projects/IcdIt2007/icd9cm_24.csv"))
+(o:string-l (icd:afts (icd:re-fns *edit-official-code*) (stdutils:slurp-file "~/Programming/Projects/IcdIt2007/icd9cm_24.csv"))
   (setf (gethash (icd:key o:it) off-ht) o:it))
 
 (defparameter man-ht (make-hash-table :test #'equal) "manual-bar-ht")
@@ -109,13 +109,13 @@
 ;WORKFLOW 6 tune-items
 ;------------
 (defun tune-items (lst)
-  (o:aftl (#'accented-chrs #'grklammer #'longcode1 #'longcode2) lst))
+  (icd:aftl (#'accented-chrs #'grklammer #'longcode1 #'longcode2) lst))
 
 (defun grklammer (item)
-  (o:afts (grklammer-fns *grkl*) item))
+  (icd:afts (grklammer-fns *grkl*) item))
 
 (defun longcode1 (item)
-  (o:afts (longcode-fns *longcode*) item))
+  (icd:afts (longcode-fns *longcode*) item))
 
 (defun longcode2 (item)
   (longcode-h item))

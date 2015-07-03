@@ -6,6 +6,9 @@
   (:export 
    ;UTILITIES
    key
+   aftl
+   afts
+   re-fns
    ;W1
    #:pdf-to-pages
    ;W2
