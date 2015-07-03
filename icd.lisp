@@ -3,15 +3,48 @@
 ;------------
 ; UTILITIES, ev einige ad onlips überlegen
 ;------------
-#;(defun insert-after-pos (lst index newelt)
+
+#|
+; 10.11.13
+; from icd9
+;(defun afts (strg fns)
+(defun afts (fns strg)
+  "for apply functions to scalar"
+    (eval `(funcall (o:compose ,@fns) ,strg)))
+
+;usage:  (icd::aftl '(1 2 3) (#'1+ #'1+))
+;(defmacro aftl (lst fns)
+;analog: mapcar fn lst
+(defmacro aftl (fns lst)
+  "for apply functions to list"
+  `(mapcar (o:compose ,@fns) ,lst))
+
+(defun re-fns (alist &key m)
+  "return a list of string-replace-functions, i.e reg expr functions,
+  they want a string as input
+  geht mit multiline und singlelinemode, do :m t"
+  (mapcar (lambda (alist-elt)
+            (lambda (strg)
+              (if m
+                (ppcre:regex-replace-all (ppcre:create-scanner (car alist-elt) :multi-line-mode t :single-line-mode t) strg (cdr alist-elt) :simple-calls t)
+                (ppcre:regex-replace-all (car alist-elt) strg (cdr alist-elt) :simple-calls t))))
+          alist))
+|#
+
+(defun insert-after-pos (lst index newelt)
   "insert after position, before-position can be done with (1- pos)
   from http://stackoverflow.com/questions/4387570/in-common-lisp-how-can-i-insert-an-element-into-a-list-in-place"
   (push newelt (cdr (nthcdr index lst)))
   lst)
 
-(defun key (s)
+;geht anscheinend wegen #'key nicht ??, warum??
+#;(defun key (s)
   "return the key of an entry" ;(key "123 CodeText") ; "123"
   (#~s'\s.*'' s))
+
+(defun key (line)
+	  "return the key of an entry" ;(key "123 CodeText") ; "123"
+	  (subseq line 0 (position #\space line)))
 
 (defun key-from-bar-all (line)
   "return the key from 1.bar to space, >with< points, parenthesis and slash"
@@ -59,13 +92,8 @@
 
 (defun trim-text (strg)
   "remove first and last line of string, with sed and head, da es mit regex nicht gelingt"
-  (o:file-write "/tmp/pdf0" strg)
-  (o:file-write "/tmp/pdf1" (rm-first-and-last-line-from-file "/tmp/pdf0")))
-
-#;(defun trim-text (strg)
-  "remove first and last line of string, with sed and head, da es mit regex nicht gelingt"
-  (alexandria:write-string-into-file strg "/tmp/pdf0" :IF-EXISTS :overwrite)
-  (alexandria:write-string-into-file (rm-first-and-last-line-from-file "/tmp/pdf0") "/tmp/pdf1" :IF-EXISTS :overwrite))
+  (alexandria:write-string-into-file strg "/tmp/pdf0" :if-does-not-exist :create :if-exists :overwrite)
+  (alexandria:write-string-into-file (rm-first-and-last-line-from-file "/tmp/pdf0") "/tmp/pdf1" :if-does-not-exist :create :if-exists :overwrite))
 
 ;helper
 (defun rm-first-and-last-line-from-file (file)
@@ -134,8 +162,8 @@
 ;------------
 (defun bar-h (item ht fn)
   "official hash-controlled bar insertion"
-  (if (gethash (o:key item) ht)
-    (lol:aif (ctrbar item (accs-to-chrs (gethash (o:key item) ht)))
+  (if (gethash (key item) ht)
+    (lol:aif (ctrbar item (accs-to-chrs (gethash (key item) ht)))
            o:it
       (funcall fn item))))
 
@@ -168,7 +196,7 @@
 
 (defun load-ht (ht lst)
   (mapc (lambda (i)
-          (setf (gethash (o:key i) ht) i))
+          (setf (gethash (key i) ht) i))
         lst))
 
 ;------------
@@ -177,9 +205,9 @@
 (defun complete-code-h (items nc ce ht)
   "destructively insert new codes"
   (dolist (cod nc items)
-    (let ((pos (position cod items :test #'equal :key #'o:key)))
+    (let ((pos (position cod items :test #'equal :key #'key)))
       (dolist (n (reverse ce))
-        (setf items (o:insert-after-pos items pos (defoffbar (gethash (lol:mkstr cod n) ht))))))))
+        (setf items (insert-after-pos items pos (defoffbar (gethash (lol:mkstr cod n) ht))))))))
 
 ;------------
 ;WORKFLOW 6 tune items
@@ -190,7 +218,7 @@
 (defun grklammer-fns (alist) 
   (mapcar (lambda (ai) ; alist-item
             (lambda (item)
-              (if (string= (car ai) (o:key item)) 
+              (if (string= (car ai) (key item)) 
                 (ppcre:regex-replace (ppcre:create-scanner "(?<=\\|).*" :single-line-mode t) item (cdr ai))
                 item)))
           alist))
@@ -208,7 +236,7 @@
 ;------------
 (defun insert-key (lst)
   (mapcar (lambda (x)
-            (lol:mkstr (k2n (o:key x)) #\| x))
+            (lol:mkstr (k2n (key x)) #\| x))
           lst))
 
 (defun k2n (k)
@@ -220,7 +248,7 @@
   (let ((h1 ""))
     (mapcar (lambda (x)
               ; match 01|1. text  - i.e. 2 digits, bar, 1-2 digits, period and space, (h2i does match 01| too)
-              (o:acond ((ppcre:scan-to-strings "^\\d{2}(?=\\|\\d{1,2}\\. )" x) (setf h1 (format nil "~a." o:it)) x)
+              (fare-utils:acond ((ppcre:scan-to-strings "^\\d{2}(?=\\|\\d{1,2}\\. )" x) (setf h1 (format nil "~a." fare-utils:it)) x)  
                        (t (lol:mkstr h1 x))))
             lst)))
 
@@ -242,6 +270,20 @@
 
 @END ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;  drafts ;;;;;;;;;;;;;;;;;;;
-#;(defun key (line)
-	  "return the key of an entry" ;(key "123 CodeText") ; "123"
-	  (subseq line 0 (position #\space line)))
+#;#;(defun trim-text (strg)
+  "remove first and last line of string, with sed and head, da es mit regex nicht gelingt"
+  (o:file-write "/tmp/pdf0" strg)
+  (o:file-write "/tmp/pdf1" (rm-first-and-last-line-from-file "/tmp/pdf0")))
+
+
+
+;damit point idem wie h2, in h2 notwendig
+#;(defun insert-h1 (lst)
+  (let ((h1 ""))
+    (mapcar (lambda (x)
+              ; match 01|1. text  - i.e. 2 digits, bar, 1-2 digits, period and space, (h2i does match 01| too)
+              (stdutils:acond ((ppcre:scan-to-strings "^\\d{2}(?=\\|\\d{1,2}\\. )" x) (setf h1 (format nil "~a." stdutils:it)) x)
+                       (t (lol:mkstr h1 x))))
+            lst)))
+
+

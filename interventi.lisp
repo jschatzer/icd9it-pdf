@@ -22,7 +22,7 @@
                 (pdf-to-items chapter)
                 (pdf-to-items-t chapter))))
 ;    (create-perlarry-file strg "~/src/lisp/icd9it-pdf/Data/dataInterventi")))
-    (create-perlarry-file strg "~/src/lisp/icd9it-pdf/Data/dataInterventi_3")))    ; -----<------------
+    (create-perlarry-file strg "~/src/lisp/icd9it-pdf/Data/dataInterventi_5")))    ; -----<------------
 
 (defun pdf-to-items (&optional (chapter 20))
   (insert-path ;W7

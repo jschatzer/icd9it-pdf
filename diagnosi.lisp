@@ -146,10 +146,11 @@
 (defun insert-h2 (lst)
   (let ((h2 ""))
     (mapcar (lambda (x)
-              (o:acond ((ppcre:scan "^\\d{2}(?=\\|\\d{1,2}\\. )" x) (setf h2 "") x)  ; h2 "" brauchts  für chapt 4, das keine h2 hat !!
-                       ((ppcre:scan-to-strings "^[V\\d]{6}(?=\\|)" x) (setf h2 (format nil "~a." o:it)) x) ; point hier sonst wird "04..280.0|280.0 output
+              (fare-utils:acond ((ppcre:scan "^\\d{2}(?=\\|\\d{1,2}\\. )" x) (setf h2 "") x)  ; h2 "" brauchts  für chapt 4, das keine h2 hat !!
+                       ((ppcre:scan-to-strings "^[V\\d]{6}(?=\\|)" x) (setf h2 (format nil "~a." fare-utils:it)) x) ; point hier sonst wird "04..280.0|280.0 output
                        (t (lol:mkstr h2 x))))
             lst)))
+
 
 (defun insert-h2a (lst)
   "chapt 5 hat überzähligen header, PSICOSI (290-299), 5.11.13 geht, ebenso chapt 17 fratture, ferite.
@@ -166,3 +167,12 @@
 ;------------
 
 @END ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+#;(defun insert-h2 (lst)
+  (let ((h2 ""))
+    (mapcar (lambda (x)
+              (stdutils:acond ((ppcre:scan "^\\d{2}(?=\\|\\d{1,2}\\. )" x) (setf h2 "") x)  ; h2 "" brauchts  für chapt 4, das keine h2 hat !!
+                       ((ppcre:scan-to-strings "^[V\\d]{6}(?=\\|)" x) (setf h2 (format nil "~a." stdutils:it)) x) ; point hier sonst wird "04..280.0|280.0 output
+                       (t (lol:mkstr h2 x))))
+            lst)))
+
+
