@@ -93,12 +93,6 @@
 
 (defparameter off-ht (make-hash-table :test #'equal) "official-code-ht")
 
-#|
-;Orig
-(o:string-l (icd:afts (icd:re-fns *edit-official-code*) (stdutils:slurp-file "~/Programming/Projects/IcdIt2007/icd9cm_24Interventi.csv"))
-  (setf (gethash (o:key o:it) off-ht) o:it))
-|#
-
 (icd:string-l (icd:afts (icd:re-fns *edit-official-code*) (stdutils:slurp-file "~/Programming/Projects/IcdIt2007/icd9cm_24Interventi.csv"))
   (setf (gethash (icd:key stdutils:it) off-ht) stdutils:it))  ; it kommt von awhen2
 
@@ -133,21 +127,34 @@
 ;WORKFLOW 8 create-perlarry-file
 ;------------
 
-;;; END ;;;;;;;;;;;;;;;
+;------------
 
-#|
-
-#;(defun pdf-to-items (&optional (chapter 20))
-  ;(insert-path ;W7
-    ;(tune-items  ;W6
-      ;(complete-code ;W5
-        ;(mark-comments  ;W4
-          ;(column-to-items   ;W3
-            ;(pages-to-column     ;W2
-              (pdf-to-pages "Interventi.pdf" *chapters* chapter))
-;))
-;)))) ;W1
+;benchmark
+;(defun pdf-to-items (&optional (chapter 20))
+;  (insert-path ;W7
+;    (tune-items  ;W6
 
 
-|#
+(defun time-complete-code ()
+ (time      (defparameter x (complete-code ;W5
+        (mark-comments  ;W4
+          (column-to-items   ;W3
+            (pages-to-column     ;W2
+              (pdf-to-pages "Interventi.pdf" *chapters* 20))))))))
+
+
+
+(defun benchmark-interventi ()
+  (print "int/1")
+(time (o:p pdf-to-pages (icd9th::pdf-to-pages "Interventi.pdf" icd9th::*chapters* 20)))
+  (print "int/2")
+(time (o:p pages-to-column (icd9th::pages-to-column pdf-to-pages)))
+(time (o:p column-to-items (icd9th::column-to-items pages-to-column)))
+(time (o:p mark-comments (icd9th::mark-comments column-to-items)))
+(time (o:p complete-code (icd9th::complete-code mark-comments)))   ; geth nicht ???
+(time (o:p tune-items (icd9th::tune-items complete-code)))
+(time (o:p insert-path (icd9th::insert-path tune-items)))
+)
+
+
 

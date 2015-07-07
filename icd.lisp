@@ -1,4 +1,5 @@
 (in-package #:icd)
+; i item, 
 
 ;------------
 ; UTILITIES, ev einige ad onlips überlegen
@@ -76,15 +77,21 @@
                  (ppcre:regex-replace-all "\\s+" (rm-linebreaks (subseq entry 0 pos)) " ")
                  (subseq entry pos))))
 
-(defun rm-linebreaks (strg)
-  (afts (re-fns *rlb*) strg))
+(defun rm-linebreaks (strg) (afts (re-fns *rlb*) strg))
+(defun edit-entries-space (lst) (mapcar #'reduce-space lst))
+(defun reduce-space (i) "33   Altri interventi - there are often 3-4 spaces between key and text" (#~s'\s+' ' i))  ; ev use this in completet chords
 
-(defun edit-entries-space (lst)
-  (mapcar #'edit-entry-X lst))
-
-(defun edit-entry-X (strg)
-  "33   Altri interventi - there are often 3-4 spaces between key and text"
-  (ppcre:regex-replace  "^([V\\d\\.]+)\\s{2,}" strg "\\1 "))
+(defun make-tree (f &optional (node-key ""))
+  "make tree from txt-file, cll"  ; insert url
+	(loop
+		for line = (peek f) for line-key = (key-bar line)
+		while (prefix-p node-key line-key)
+		collect (cons (consume f) (make-tree f line-key))))
+(let ((line nil))
+	(defun peek (f) (or line (setf line (read f nil nil))))
+	(defun consume (f) (prog1 (peek f) (setf line nil))))
+(defun key-bar (line) (subseq line 0 (position #\| line)))
+(defun prefix-p (k1 k2) (eql (mismatch k1 k2) (length k1)))
 
 ;------------
 ;WORKFLOW 1 pdf-to-pages
@@ -176,7 +183,7 @@
   "official hash-controlled bar insertion"
   (if (gethash (key item) ht)
     (lol:aif (ctrbar item (accs-to-chrs (gethash (key item) ht)))
-           lol:it
+      lol:it
       (funcall fn item))))
 
 (defun accs-to-chrs (strg)
@@ -195,16 +202,10 @@
     (let ((item (format nil "~{~&~a~}" (mapcar #'eoltest (ppcre:split "\\n" strg)))))
       (if (find #\| item) (rm-nsb item)))))
 
-(defun connect-first2lines-if- (str)
-  (ppcre:regex-replace "(?<!\\d)-\\n\\s*" str ""))
-
-(defun defoffbar (item)
-    "default code bar, on end of item"
-      (rm-nsb (lol:mkstr item #\|)))
-
-(defun defmanbar (item)
-  "default header bar, on end of 1. line"
-  (ppcre:regex-replace "\\n" item "|"))
+(defun connect-first2lines-if- (i) (#~s'(?<!\d)-\n\s*'' i))
+(defun defoffbar (i) "default code bar, on end of item" (rm-nsb (#~s'$'|' i))) ; 534.91 ULCERA GASTRODIGIUNALE NON  SPECIFICATA  <--- das ist der einzige space für das rm-nsb hier gebraucht wird
+;(defun defoffbar (i) "default code bar, on end of item" (#~s'$'|' i))  ; ev use this later, to simplify
+(defun defmanbar (i) "default header bar, on end of 1. line" (#~s'\n'|' i))
 
 (defun load-ht (ht lst)
   (mapc (lambda (i)
@@ -280,47 +281,15 @@
     (with-open-file (strm file :direction :output :if-does-not-exist :create :if-exists :supersede)
       (format strm "use utf8;~%@icd = (~%~{~s,~%~})" (append dg diag th ther)))))
 
+;------------
+;WORKFLOW 9 create-lisptree-file
+;------------
+(defun create-lisptree-file% (file)
+  "edit a copy of the perl array file"
+  (clesh:script (format nil "sed '1,2d; $d; s/,$//' ~a > temp1" file)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;
-#|
-@END ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;  drafts ;;;;;;;;;;;;;;;;;;;
-#;#;(defun trim-text (strg)
-  "remove first and last line of string, with sed and head, da es mit regex nicht gelingt"
-  (o:file-write "/tmp/pdf0" strg)
-  (o:file-write "/tmp/pdf1" (rm-first-and-last-line-from-file "/tmp/pdf0")))
-
-
-
-;damit point idem wie h2, in h2 notwendig
-#;(defun insert-h1 (lst)
-  (let ((h1 ""))
-    (mapcar (lambda (x)
-              ; match 01|1. text  - i.e. 2 digits, bar, 1-2 digits, period and space, (h2i does match 01| too)
-              (stdutils:acond ((ppcre:scan-to-strings "^\\d{2}(?=\\|\\d{1,2}\\. )" x) (setf h1 (format nil "~a." stdutils:it)) x)
-                       (t (lol:mkstr h1 x))))
-            lst)))
-
-#;(defun trim-text (strg)
-  "remove first and last line of string, with sed and head, da es mit regex nicht gelingt"
-  (o:file-write "/tmp/pdf0" strg)
-  (o:file-write "/tmp/pdf1" (rm-first-and-last-line-from-file "/tmp/pdf0")))
-
-
-
-#;(defun trim-text (strg)
-  "remove first and last line of string, with sed and head, da es mit regex nicht gelingt"
-  (alexandria:write-string-into-file strg "/tmp/pdf0" :if-does-not-exist :create :if-exists :overwrite)
-  (alexandria:write-string-into-file (rm-first-and-last-line-from-file "/tmp/pdf0") "/tmp/pdf1" :if-does-not-exist :create :if-exists :overwrite))
-
-#|
-;- - - - -
-;(defmacro! do-file-l (filename &body body)
-#;(defmacro! file-l (filename &body body)
-	"iterate over the lines in a file"
-	`(with-open-file (,g!str ,filename)
-		 (awhile2 (read-line2 ,g!str)	,@body)))
-|#
-
-
-|#
+(defun create-lisp-tree-file (infile outfile) ;("temp1" "icdtreetest") ;;;;--->>"IcdIt9with2bars.data")
+  (with-open-file (o outfile :direction :output :if-does-not-exist :create :if-exists :supersede)
+    (print 
+      (with-open-file (i infile) (make-tree i))
+      o)))

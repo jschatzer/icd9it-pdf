@@ -95,12 +95,6 @@
 
 (defparameter off-ht (make-hash-table :test #'equal) "official-code-ht")
 
-#|
-; ORig
-(o:string-l (icd:afts (icd:re-fns *edit-official-code*) (stdutils:slurp-file "~/Programming/Projects/IcdIt2007/icd9cm_24.csv"))
-  (setf (gethash (icd:key o:it) off-ht) o:it))
-|#
-
 (icd:string-l (icd:afts (icd:re-fns *edit-official-code*) (stdutils:slurp-file "~/Programming/Projects/IcdIt2007/icd9cm_24.csv"))
   (setf (gethash (icd:key stdutils:it) off-ht) stdutils:it))
 
@@ -174,27 +168,15 @@
 ;WORKFLOW 8 create-perlarry-file
 ;------------
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-#|
-@END ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-#;(defun insert-h2 (lst)
-  (let ((h2 ""))
-    (mapcar (lambda (x)
-              (stdutils:acond ((ppcre:scan "^\\d{2}(?=\\|\\d{1,2}\\. )" x) (setf h2 "") x)  ; h2 "" brauchts  für chapt 4, das keine h2 hat !!
-                       ((ppcre:scan-to-strings "^[V\\d]{6}(?=\\|)" x) (setf h2 (format nil "~a." stdutils:it)) x) ; point hier sonst wird "04..280.0|280.0 output
-                       (t (lol:mkstr h2 x))))
-            lst)))
+;benchmark
+(defun benchmark-diagnosi ()
+(time (o:p pdf-to-pages (icd9dg::pdf-to-pages "Diagnosi.pdf" icd9dg::*chapters* 20)))
+(time (o:p pages-to-column (icd9dg::pages-to-column pdf-to-pages)))
+(time (o:p column-to-items (icd9dg::column-to-items pages-to-column)))
+(time (o:p mark-comments (icd9dg::mark-comments column-to-items)))
+(time (o:p complete-code (icd9dg::complete-code mark-comments)))
+(time (o:p tune-items (icd9dg::tune-items complete-code)))
+(time (o:p insert-path (icd9dg::insert-path tune-items)))
+)
 
 
-#|
-;geht nicht ganz
-(defmacro string-l (s &body body)
-  "iterate over the lines in a string"
-  `(stdutils:do-stream-lines (l ,s) ,@body))
-
-(string-l (icd:afts (icd:re-fns *edit-official-code*) (stdutils:slurp-file "~/Programming/Projects/IcdIt2007/icd9cm_24.csv"))
-  (setf (gethash (icd:key l) off-ht) l))
-|#
-
-
-|#
