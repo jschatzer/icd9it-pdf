@@ -10,6 +10,7 @@
    afts
    re-fns
    string-l
+reduce-space
    ;W1
    #:pdf-to-pages
    ;W2

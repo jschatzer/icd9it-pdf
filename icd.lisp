@@ -5,9 +5,9 @@
 ; UTILITIES, ev einige ad onlips überlegen
 ;------------
 ;test 24.10.13
-(lol:defmacro! string-l (filename &body body)
+(lol:defmacro! string-l (stg &body body)
 	"iterate over the lines in a string"
-	`(with-input-from-string (,g!str ,filename)
+	`(with-input-from-string (,g!str ,stg)
 		 (stdutils:awhile2 (read-line2 ,g!str)	,@body)))
 
 ;helper 
@@ -79,7 +79,19 @@
 
 (defun rm-linebreaks (strg) (afts (re-fns *rlb*) strg))
 (defun edit-entries-space (lst) (mapcar #'reduce-space lst))
-(defun reduce-space (i) "33   Altri interventi - there are often 3-4 spaces between key and text" (#~s'\s+' ' i))  ; ev use this in completet chords
+;(defun reduce-space (i) "33   Altri interventi - there are often 3-4 spaces between key and text" (#~s'\s+' ' i))  ; ev use this in completet chords
+
+
+; ev make a fork in git
+; 8.7.15 damit scheint mark comments besser zu gehen, es werden viel merhr bars inseriert <-----
+(defun reduce-space (i) 
+  "remove ms-word? spaces
+ excluding indented lines"
+  (with-output-to-string (l)
+    (string-l i
+     (if (not (#~m'^\s+' stdutils:it))
+       (format l "~a~%" (#~s' +' 'g stdutils:it))
+       (format l "~a~%" stdutils:it)))))
 
 (defun make-tree (f &optional (node-key ""))
   "make tree from txt-file, cll"  ; insert url
@@ -92,6 +104,14 @@
 	(defun consume (f) (prog1 (peek f) (setf line nil))))
 (defun key-bar (line) (subseq line 0 (position #\| line)))
 (defun prefix-p (k1 k2) (eql (mismatch k1 k2) (length k1)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; for tests only
+(defun count-bars (s)
+  (stdutils:count-string-char-if (lambda (x) (char= #\| x)) s))
+
+(defun bars-in-entries (file)  ; lisptree-file
+  (mapcar 'count-bars (o:flatten (with-open-file (f file) (read f)))))  ;~/src/lisp/icd9it-pdf/data/dataDgTh9"))
 
 ;------------
 ;WORKFLOW 1 pdf-to-pages
@@ -179,6 +199,10 @@
 ;------------
 ;WORKFLOW 4 mark comments
 ;------------
+;
+;insert garantee 2 bars, here garantee 1 and only 1 bar    <------- see  (count-if (lambda (x) (/= 2 x)) (bars-in-entries "icdtreetest")) ; 1654  in zuBehalten
+;
+;
 (defun bar-h (item ht fn)
   "official hash-controlled bar insertion"
   (if (gethash (key item) ht)
@@ -284,12 +308,21 @@
 ;------------
 ;WORKFLOW 9 create-lisptree-file
 ;------------
-(defun create-lisptree-file% (file)
+#;(defun create-lisptree-file% (file)
   "edit a copy of the perl array file"
   (clesh:script (format nil "sed '1,2d; $d; s/,$//' ~a > temp1" file)))
 
-(defun create-lisp-tree-file (infile outfile) ;("temp1" "icdtreetest") ;;;;--->>"IcdIt9with2bars.data")
+#;(defun create-lisptree-file (infile outfile) ;("temp1" "icdtreetest") ;;;;--->>"IcdIt9with2bars.data")
   (with-open-file (o outfile :direction :output :if-does-not-exist :create :if-exists :supersede)
-    (print 
-      (with-open-file (i infile) (make-tree i))
-      o)))
+    (format o "~s" 
+      (with-open-file (i infile) (make-tree i)))))
+
+(defun create-lisptree-file (infile outfile) ;("temp1" "icdtreetest") ;;;;--->>"IcdIt9with2bars.data")
+  "edit a copy of the perl array file"
+(clesh:script (format nil "sed '1,2d; $d; s/,$//' ~a > temp1" infile))
+  (with-open-file (o outfile :direction :output :if-does-not-exist :create :if-exists :supersede)
+    (format o "~s" 
+;      (with-open-file (i infile) (make-tree i)))))
+      (with-open-file (i "temp1") (make-tree i)))))
+
+

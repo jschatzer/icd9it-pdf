@@ -69,11 +69,22 @@
   "convert a single-column-string to a list of items"
   (string-to-list (edit-column (uc-header (optimize-text str)))))
 
+
+; das scheint ähnlich gut zu gehen wie unten
+#;(defun column-to-items (str)
+  "convert a single-column-string to a list of items"
+  (string-to-list (edit-column (uc-header (optimize-text (icd:reduce-space str))))))
+
+
 (defun string-to-list (strg)
   (split-into-items (tag-items *tag-re* strg))) ;re for regular-expressions
 
-(defun edit-column (strg)
+#;(defun edit-column (strg)
   (icd:afts (icd:re-fns *column-edits* :m t) strg))
+
+(defun edit-column (strg)
+  (icd:afts (icd:re-fns *column-edits* :m t) (icd:reduce-space strg)))
+
 
 ;------------
 ;WORKFLOW 4 mark-comments
