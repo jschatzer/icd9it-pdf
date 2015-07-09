@@ -82,17 +82,6 @@
 ;(defun reduce-space (i) "33   Altri interventi - there are often 3-4 spaces between key and text" (#~s'\s+' ' i))  ; ev use this in completet chords
 
 
-; ev make a fork in git
-; 8.7.15 damit scheint mark comments besser zu gehen, es werden viel merhr bars inseriert <-----
-(defun reduce-space (i) 
-  "remove ms-word? spaces
- excluding indented lines"
-  (with-output-to-string (l)
-    (string-l i
-     (if (not (#~m'^\s+' stdutils:it))
-       (format l "~a~%" (#~s' +' 'g stdutils:it))
-       (format l "~a~%" stdutils:it)))))
-
 (defun make-tree (f &optional (node-key ""))
   "make tree from txt-file, cll"  ; insert url
 	(loop
@@ -154,7 +143,7 @@
 (defun edit-single-page-helper (page reg-lst)
   (dolist (regex reg-lst page)
     (destructuring-bind (code text) (ppcre:split "\\s+" regex :limit 2)
-             (setf page (ppcre:regex-replace (format nil "(~a)\\s{3,}(~a)" code text) page  "\\1 \\2")))))
+      (setf page (#~s/(format nil "(~a)\\s{3,}(~a)" code text)/"\\1 \\2"/ page)))))
 
 (defun split-page (page &optional (width 75) (w 2))
   "split a 2 column page"
@@ -197,6 +186,17 @@
     (cdr (ppcre:split "\\n?§" strg)))) ;(ppcre:split "§" "§a §b) ; ("" "a " "b ")
 
 ;------------
+;WORKFLOW 3 column-to-items
+;------------
+(defun reduce-space (i) 
+  "remove ms-word spaces, excluding indented lines"
+  (with-output-to-string (l)
+    (string-l i
+     (if (not (#~m'^\s+' stdutils:it))
+       (format l "~a~%" (#~s' +' 'g stdutils:it))
+       (format l "~a~%" stdutils:it)))))
+
+;------------
 ;WORKFLOW 4 mark comments
 ;------------
 ;
@@ -221,7 +221,7 @@
              (if (string-equal
                   (subseq line (position-if #'stdutils:constituent line))
                   (subseq ctrl (- (length ctrl) (length (subseq line (position-if #'stdutils:constituent line))))))
-               (lol:mkstr line #\|)
+               (#~s'$'|' line)
                line))))
     (let ((item (format nil "~{~&~a~}" (mapcar #'eoltest (ppcre:split "\\n" strg)))))
       (if (find #\| item) (rm-nsb item)))))
@@ -326,3 +326,44 @@
       (with-open-file (i "temp1") (make-tree i)))))
 
 
+@END
+#;(defun edit-single-page-helper (page reg-lst)
+  (dolist (regex reg-lst page)
+    (destructuring-bind (code text) (ppcre:split "\\s+" regex :limit 2)
+             (setf page (ppcre:regex-replace (format nil "(~a)\\s{3,}(~a)" code text) page  "\\1 \\2")))))
+
+
+
+; 8.7.15 functions gehen nicht mit modifier!! perlre
+#;(defun uc-header (strg)
+  "remove linebreaks from upper case header"
+  (let ((regex1 "\\s*\\n\\s*(?=\\([\\dV]?\\d\\d-[\\dV]?\\d\\d\\))|\\s*\\n\\s*(?=\\(00\\))") ;alternative is only for chapt 0 interventi
+        (lookbehind "(?<!ECHO)(?<!NIA)(?<! [ABC])(?<![a-z]')(?<! DNA)(?<!IV)(?<!II)(?<!- I)(?<!SAI)(?<=[A-Z,'])")
+        (regex2 "\\s*-?\\n\\s*(?=[A-Z,'])"))
+    (#~s'CON NETTIVO'CONNETTIVO' (#~s/(format nil "~a~a|~a~a" lookbehind regex1 lookbehind regex2)/" "/gm strg))))
+
+#;(defun uc-header (strg)
+  "remove linebreaks from upper case header"
+(#~s'CON NETTIVO'CONNETTIVO'
+  (let ((regex1 "\\s*\\n\\s*(?=\\([\\dV]?\\d\\d-[\\dV]?\\d\\d\\))|\\s*\\n\\s*(?=\\(00\\))") ;alternative is only for chapt 0 interventi
+        (lookbehind "(?<!ECHO)(?<!NIA)(?<! [ABC])(?<![a-z]')(?<! DNA)(?<!IV)(?<!II)(?<!- I)(?<!SAI)(?<=[A-Z,'])")
+        (regex2 "\\s*-?\\n\\s*(?=[A-Z,'])"))
+    (#~s/(format nil "~a~a|~a~a" lookbehind regex1 lookbehind regex2)/" "/gm strg))))
+
+
+
+#;(defun tag-items (lst strg)
+  "return a tagged string"
+  (flet ((fns ()
+           (mapcar (lambda (x)
+                     (lambda (s)
+                       (if (eql :h2 (car x)) ;in case of h2 also invert text and key
+                         (#~s/(cadr x)/"§\\2 \\1"/gm s)
+                         (#~s/(cadr x)/"§\\1"/gm s))))
+                   lst)))
+    (eval `(funcall (stdutils:compose ,@(fns)) ,strg))))
+
+
+
+; ev make a fork in git
+; 8.7.15 damit scheint mark comments besser zu gehen, es werden viel merhr bars inseriert <-----

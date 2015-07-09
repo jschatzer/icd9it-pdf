@@ -64,24 +64,15 @@
 ;------------
 ;WORKFLOW 3 column-to-items
 ;------------
-(defun column-to-items (str)
+(defun column-to-items (stg)
   "convert a single-column-string to a list of items"
-  (string-to-list (edit-column (uc-header (optimize-text str)))))
-#;(defun column-to-items (str)
-  "convert a single-column-string to a list of items"
-  (string-to-list (edit-column (uc-header (optimize-text (icd:reduce-space str))))))
+  (string-to-list (edit-column (uc-header (optimize-text (icd:reduce-space stg))))))
 
+(defun string-to-list (stg)
+  (split-into-items (tag-items *tag-re* stg))) ;re for regular-expressions
 
-
-
-(defun string-to-list (strg)
-  (split-into-items (tag-items *tag-re* strg))) ;re for regular-expressions
-
-#;(defun edit-column (strg)
-  (icd:afts (icd:re-fns *column-edits*) strg))
-(defun edit-column (strg)
-  (icd:afts (icd:re-fns *column-edits*) (icd:reduce-space strg)))
-
+(defun edit-column (stg)
+  (icd:afts (icd:re-fns *column-edits*) stg))
 
 ;------------
 ;WORKFLOW 4 mark comments
@@ -165,5 +156,13 @@
 (time (o:p insert-path (icd9th::insert-path tune-items)))
 )
 
+
+@END
+#;(defun column-to-items (str)
+  "convert a single-column-string to a list of items"
+  (string-to-list (edit-column (uc-header (optimize-text str)))))
+;ginge auch
+#;(defun edit-column (strg)
+  (icd:afts (icd:re-fns *column-edits*) (icd:reduce-space strg)))
 
 

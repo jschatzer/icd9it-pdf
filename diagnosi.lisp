@@ -48,43 +48,29 @@
 ;WORKFLOW 2 pages-to-column
 ;------------
 (defun pages-to-column (lst)
-  (stdutils:list-to-delimited-string (icd:aftl (#'split-page #'edit-single-page #'edit-single-page2 #'pad-text) lst)))
+  (stdutils:list-to-delimited-string (icd:aftl (#'split-page #'edit-single-page #'pad-text) (c655.2 lst))))
 
 (defun edit-single-page (page)
   "reduce spaces between key and text, to enable page-splitting"
     (edit-single-page-helper page *tagged-entries*))
 
-(defun edit-single-page2 (page)
-  "zusätzliche edits"
-  (funcall (stdutils:compose #'c655.2) page))
-
-(defun c655.2 (page)
-  "655.2 - im txt from pdf ist eine neue Zeile sowie ' strange char zwischen code und Beschreibung"
-  (ppcre:regex-replace "655.2[\\n\\s']+(Malattia eredit)" page "655.2 \\1"))
+(defun c655.2 (lst) ;; 9.7.15 subst only this page
+  "655.2 - im txt from pdf ist eine neue Zeile sowie ' strange char zwischen code und Beschreibung, malattia...che puo' colpire...."
+  (setf (nth 221 lst) (#~s/"655.2[\\n\\s']+"/"655.2 "/ (nth 221 lst))) 
+  lst)
 
 ;------------
 ;WORKFLOW 3 column-to-items
 ;------------
-(defun column-to-items (str)
+(defun column-to-items (stg)
   "convert a single-column-string to a list of items"
-  (string-to-list (edit-column (uc-header (optimize-text str)))))
+  (string-to-list (edit-column (uc-header (optimize-text (icd:reduce-space stg))))))
 
+(defun string-to-list (stg)
+  (split-into-items (tag-items *tag-re* stg))) ;re for regular-expressions
 
-; das scheint ähnlich gut zu gehen wie unten
-#;(defun column-to-items (str)
-  "convert a single-column-string to a list of items"
-  (string-to-list (edit-column (uc-header (optimize-text (icd:reduce-space str))))))
-
-
-(defun string-to-list (strg)
-  (split-into-items (tag-items *tag-re* strg))) ;re for regular-expressions
-
-#;(defun edit-column (strg)
-  (icd:afts (icd:re-fns *column-edits* :m t) strg))
-
-(defun edit-column (strg)
-  (icd:afts (icd:re-fns *column-edits* :m t) (icd:reduce-space strg)))
-
+(defun edit-column (stg)
+  (icd:afts (icd:re-fns *column-edits* :m t) stg))
 
 ;------------
 ;WORKFLOW 4 mark-comments
@@ -164,7 +150,6 @@
                        (t (lol:mkstr h2 x))))
             lst)))
 
-
 (defun insert-h2a (lst)
   "chapt 5 hat überzähligen header, PSICOSI (290-299), 5.11.13 geht, ebenso chapt 17 fratture, ferite.
   h2a for lack of a better name, ev h2bis"
@@ -189,5 +174,40 @@
 (time (o:p tune-items (icd9dg::tune-items complete-code)))
 (time (o:p insert-path (icd9dg::insert-path tune-items)))
 )
+
+@END
+(defun column-to-items (str)
+  "convert a single-column-string to a list of items"
+  (string-to-list (edit-column (uc-header (optimize-text str)))))
+
+
+;
+(defun edit-column (strg)
+  (icd:afts (icd:re-fns *column-edits* :m t) (icd:reduce-space strg)))
+
+ das scheint ähnlich gut zu gehen wie unten
+#;(defun pages-to-column (lst)
+  (stdutils:list-to-delimited-string (icd:aftl (#'split-page #'edit-single-page #'edit-single-page2 #'pad-text) lst)))
+
+
+
+#;(defun edit-single-page2 (page)
+  "zusätzliche edits"
+  (funcall (stdutils:compose #'c655.2) page))
+
+#;(defun c655.2 (page)
+  "655.2 - im txt from pdf ist eine neue Zeile sowie ' strange char zwischen code und Beschreibung"
+  (ppcre:regex-replace "655.2[\\n\\s']+(Malattia eredit)" page "655.2 \\1"))
+
+; 9.7.15 subs only this page
+;(nth 221 (icd9dg::pages))
+;(#~s/"655.2[\\n\\s']+(Malattia eredit)"/"655.2 \\1"/ (nth 221 (icd9dg::pages))
+;(#~s/"655.2[\\n\\s']+"/"655.2 "/ (nth 221 (icd9dg::pages))
+
+#;(defun c655.2 (lst)
+  "655.2 - im txt from pdf ist eine neue Zeile sowie ' strange char zwischen code und Beschreibung"
+  (let ((page (#~s/"655.2[\\n\\s']+"/"655.2 "/ (nth 221 lst))))
+  (substitute (nth 221 lst) page :test 'equal)))
+
 
 
