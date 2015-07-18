@@ -50,16 +50,14 @@
 (defun pages-to-column (lst)
    (stdutils:list-to-delimited-string (icd:aftl (#'split-page #'edit-single-page #'edit-single-page2 #'pad-text) lst)))
 
-(defun edit-single-page (page)
-  (edit-single-page-helper page *tagged-entries*))
+(defun edit-single-page (page) (edit-single-page-helper page *tagged-entries*))
 
 ;zusätzliche edits
 (defun edit-single-page2 (page)
   "reduce spaces between key and text, to enable page-splitting"
   (funcall (stdutils:compose #'c85) page))
 
-(defun c85 (strg)
-  (ppcre:regex-replace "985 (Interventi sulla mammella)" strg "85 \\1"))
+(defun c85 (strg) (#~s'9(?=85 Interventi sulla mammella)'' strg))
 
 ;------------
 ;WORKFLOW 3 column-to-items
@@ -68,11 +66,8 @@
   "convert a single-column-string to a list of items"
   (string-to-list (edit-column (uc-header (optimize-text (icd:reduce-space stg))))))
 
-(defun string-to-list (stg)
-  (split-into-items (tag-items *tag-re* stg))) ;re for regular-expressions
-
-(defun edit-column (stg)
-  (icd:afts (icd:re-fns *column-edits*) stg))
+(defun string-to-list (stg) (split-into-items (tag-items *tag-re* stg))) ;re for regular-expressions
+(defun edit-column (stg) (icd:afts (icd:re-fns *column-edits*) stg))
 
 ;------------
 ;WORKFLOW 4 mark comments
@@ -99,6 +94,52 @@
 (defparameter man-ht (make-hash-table :test #'equal) "manual-bar-ht")
 (load-ht man-ht *man-ht*)
 
+;;; 17.7.15 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;beide gehen
+;(defun ins-bar (i c) (let ((p (length c))) (lol:mkstr (subseq i 0 p) #\| (subseq i p))))
+;(defun ins-bar (i c &aux (p (length c))) (lol:mkstr (subseq i 0 p) #\| (subseq i p)))  ; insert hash-controlled bar
+;(defun insert-hash-controlled-bar (i c &aux (p (length c))) (lol:mkstr (subseq i 0 p) #\| (subseq i p)))  ; insert hash-controlled bar
+
+
+
+#|
+ (defun hash-bar (i h)
+  (let ((ctrl-length (length (gethash (key i) h))))
+    (if (plusp ctrl-length) 
+      (#~s/i/(lambda (x) / i))
+      (setf (elt i (decf ctrl-length)) #\|))
+    i))
+
+
+(defun code-bar (i h)
+  (let ((ctrl-length (length (gethash (key i) h))))
+    (if (plusp ctrl-length) 
+      (#~s'$'|' i)
+      i)))
+
+;geht
+(defun code-bar (i h)
+  (if (gethash (key i) h)
+    (#~s'$'|' i)
+    i))
+
+ (defun header-bar (i h)
+  (if (gethash (key i) h)
+    (#~s'$'|' i)
+    i))
+
+(defun sub-s1 (s p) (subseq s 0 p))
+(defun sub-s2 (s p) (subseq s p))
+;(defun ins-bar (i c) (let ((p (length c))) (#~s/(format nil "(~a)(~a)" (sub-s1 i p) (sub-s2 i p))/"\\1|\\2"/ "abc")))
+(defun ins-bar (i c) (let ((p (length c))) (lol:mkstr (sub-s1 i p) #\| (sub-s2 i p))))
+
+
+(ins-bar "abc" "ab") ; "ab|c"
+
+|#
+
+
+
 ;------------
 ;WORKFLOW 5 complete-entries
 ;------------
@@ -109,13 +150,13 @@
 ;WORKFLOW 6 tune items
 ;------------
 (defun tune-items (lst)
-(icd:aftl (#'longcode #'grklammer #'accented-chrs) lst))
+  (icd:aftl (#'longcode #'grklammer #'accented-chrs) lst))
 
 (defun grklammer (item)
-    (icd:afts (grklammer-fns *grkl*) item))
+  (icd:afts (grklammer-fns *grkl*) item))
 
 (defun longcode (item)
-    (icd:afts (longcode-fns *longcode*) item))
+  (icd:afts (longcode-fns *longcode*) item))
 
 ;------------
 ;;WORKFLOW 7 insert-path
@@ -128,8 +169,8 @@
 ;------------
 
 ;------------
-
 ;benchmark
+;------------
 ;(defun pdf-to-items (&optional (chapter 20))
 ;  (insert-path ;W7
 ;    (tune-items  ;W6
@@ -156,13 +197,21 @@
 (time (o:p insert-path (icd9th::insert-path tune-items)))
 )
 
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 @END
-#;(defun column-to-items (str)
+#;(defun column-to-items (stg)
   "convert a single-column-string to a list of items"
-  (string-to-list (edit-column (uc-header (optimize-text str)))))
-;ginge auch
-#;(defun edit-column (strg)
-  (icd:afts (icd:re-fns *column-edits*) (icd:reduce-space strg)))
+  (string-to-list (connect-first2lines-if- (edit-column (uc-header (optimize-text (icd:reduce-space stg)))))))
+
+
+
+
+
+(defun insert-bar (item)
+  (or (offbar item)
+      (manbar item)
+      (defmanbar item)))
+
+
 
 

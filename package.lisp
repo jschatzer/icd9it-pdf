@@ -41,6 +41,8 @@ reduce-space
    ;W8
    #:create-perlarry-file
    #:create-perlarry-file-all
+   ;W9
+create-lisptree-file
    ;for tests
    #:key-from-bar-all))
 
@@ -55,7 +57,9 @@ reduce-space
 ;(defpackage #:icd9
 (defpackage #:icd9it-pdf
   (:use #:cl #:icd)
-  (:export #:icd-dg-th))
+  (:export #:icd-dg-th
+perlarray-to-lisptree
+   ))
 
 #|
 #;(defpackage #:icd9tests

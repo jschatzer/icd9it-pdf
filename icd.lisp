@@ -74,7 +74,8 @@
   "remove linebreaks (newlines) and excessive space before the barline"
   (let ((pos (position #\| entry)))
     (concatenate 'string
-                 (ppcre:regex-replace-all "\\s+" (rm-linebreaks (subseq entry 0 pos)) " ")
+;                 (ppcre:regex-replace-all "\\s+" (rm-linebreaks (subseq entry 0 pos)) " ")
+                 (#~s'\s+' 'g (rm-linebreaks (subseq entry 0 pos)))
                  (subseq entry pos))))
 
 (defun rm-linebreaks (strg) (afts (re-fns *rlb*) strg))
@@ -108,8 +109,7 @@
 (defun pdf-to-pages (pdf lst ch)
  "convert a single or all chapters (use 20) to a list of pages"
   (let ((range (eval `(case ,ch ,@lst))))
-    (funcall (stdutils:compose #'split-into-pages #'trim-text)
-             (pdf-to-txt pdf (car range) (cdr range)))))
+    (funcall (stdutils:compose #'split-into-pages #'trim-text) (pdf-to-txt pdf (car range) (cdr range)))))
 
 (defun pdf-to-txt (pdf-file from to)
   "create text from Pdf from-page to-page"
@@ -124,11 +124,8 @@
   (alexandria:write-string-into-file (rm-first-and-last-line-from-file "/tmp/pdf0") "/tmp/pdf1" :if-exists :supersede :if-does-not-exist :create))
 
 ;helper
-(defun rm-first-and-last-line-from-file (file)
-  (clesh:script (format nil "sed '1d' ~a | head -n -1" file)))
-
-(defun split-into-pages (text)
-  (ppcre:split (ppcre:create-scanner "^\\014.+?$" :multi-line-mode t) text))
+(defun rm-first-and-last-line-from-file (file) (clesh:script (format nil "sed '1d' ~a | head -n -1" file)))
+(defun split-into-pages (text) (ppcre:split (ppcre:create-scanner "^\\014.+?$" :multi-line-mode t) text))
 
 ;------------
 ;WORKFLOW 2 pages-to-column
@@ -165,9 +162,7 @@
   (let ((regex1 "\\s*\\n\\s*(?=\\([\\dV]?\\d\\d-[\\dV]?\\d\\d\\))|\\s*\\n\\s*(?=\\(00\\))") ;alternative is only for chapt 0 interventi
         (lookbehind "(?<!ECHO)(?<!NIA)(?<! [ABC])(?<![a-z]')(?<! DNA)(?<!IV)(?<!II)(?<!- I)(?<!SAI)(?<=[A-Z,'])")
         (regex2 "\\s*-?\\n\\s*(?=[A-Z,'])"))
-    (ppcre:regex-replace "CON NETTIVO"
-      (ppcre:regex-replace-all (ppcre:create-scanner (format nil "~a~a|~a~a" lookbehind regex1 lookbehind regex2) :multi-line-mode t) strg " ")
-      "CONNETTIVO")))
+    (#~s'CON NETTIVO'CONNETTIVO' (#~s/(format nil "~a~a|~a~a" lookbehind regex1 lookbehind regex2)/" "/gm strg))))
 
 (defun tag-items (lst strg)
   "return a tagged string"
@@ -175,8 +170,8 @@
            (mapcar (lambda (x)
                      (lambda (s)
                        (if (eql :h2 (car x)) ;in case of h2 also invert text and key
-                         (ppcre:regex-replace-all (ppcre:create-scanner (cadr x) :multi-line-mode t) s "§\\2 \\1")
-                         (ppcre:regex-replace-all (ppcre:create-scanner (cadr x) :multi-line-mode t) s "§\\1"))))
+                         (#~s/(cadr x)/"§\\2 \\1"/gm s)
+                         (#~s/(cadr x)/"§\\1"/gm s))))
                    lst)))
     (eval `(funcall (stdutils:compose ,@(fns)) ,strg))))
 
@@ -236,6 +231,11 @@
           (setf (gethash (key i) ht) i))
         lst))
 
+;;;;;
+(defun insert-hash-controlled-bar% (i c &aux (p (length c))) (lol:mkstr (subseq i 0 p) #\| (subseq i p)))
+(defun insert-hash-controlled-bar (i h) (insert-hash-controlled-bar% i (gethash (key i) h)))
+
+
 ;------------
 ;WORKFLOW 5 complete-items
 ;------------
@@ -256,15 +256,15 @@
   (mapcar (lambda (ai) ; alist-item
             (lambda (item)
               (if (string= (car ai) (key item)) 
-                (ppcre:regex-replace (ppcre:create-scanner "(?<=\\|).*" :single-line-mode t) item (cdr ai))
+                (#~s/"(?<=\\|).*"/(cdr ai)/s item)
                 item)))
           alist))
 
 (defun longcode-fns (alist) 
   (mapcar (lambda (ai) ; alist-item
             (lambda (strg)
-              (if (ppcre:scan (format nil "^~a\\d" (car ai)) strg)
-                (ppcre:regex-replace (cdr ai) strg "")
+              (if (#~m/(format nil "^~a\\d" (car ai))/ strg)
+                (#~s/(cdr ai)/""/ strg)
                 strg)))
           alist))
 
@@ -284,9 +284,9 @@
 (defun insert-h1 (lst)
   (let ((h1 ""))
     (mapcar (lambda (x)
-              ; match 01|1. text  - i.e. 2 digits, bar, 1-2 digits, period and space, (h2i does match 01| too)
-              (fare-utils:acond ((ppcre:scan-to-strings "^\\d{2}(?=\\|\\d{1,2}\\. )" x) (setf h1 (format nil "~a." fare-utils:it)) x)  
-                       (t (lol:mkstr h1 x))))
+              (pre:ifmatch (#~m'^(\d\d)\|\d{1,2}\. ' x)
+                (progn (setf h1 (format nil "~a." $1)) x)
+                (lol:mkstr h1 x)))
             lst)))
 
 ;------------
@@ -308,6 +308,19 @@
 ;------------
 ;WORKFLOW 9 create-lisptree-file
 ;------------
+; STDUTILS:ON-TREES <-----
+; run (icd::create-lisptree-file "~/src/lisp/icd9it-pdf/data/dataDgTh9" "icdtreetest-without-path")
+(defun create-lisptree-file (infile outfile)
+  "edit a copy of the perl array file"
+  (clesh:script (format nil "sed '1,2d; $d; s/,$//' ~a > temp1" infile))
+  (with-open-file (o outfile :direction :output :if-does-not-exist :create :if-exists :supersede)
+    (format o "~s" 
+            (funcall (o:ttrav #'cons (lambda (stg) (if (stringp stg) (#~s'[^|]+\|'' stg) stg)))
+                     (with-open-file (i "temp1") (make-tree i))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+@END
+
 #;(defun create-lisptree-file% (file)
   "edit a copy of the perl array file"
   (clesh:script (format nil "sed '1,2d; $d; s/,$//' ~a > temp1" file)))
@@ -324,6 +337,31 @@
     (format o "~s" 
 ;      (with-open-file (i infile) (make-tree i)))))
       (with-open-file (i "temp1") (make-tree i)))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;, remove path
+(defun create-lisptree-file (infile outfile) ;("temp1" "icdtreetest") ;;;;--->>"IcdIt9with2bars.data")
+  "edit a copy of the perl array file"
+(clesh:script (format nil "sed '1,2d; $d; s/,$//' ~a > temp1" infile))
+  (with-open-file (o outfile :direction :output :if-does-not-exist :create :if-exists :supersede)
+    (format o "~s" 
+;            (subst-if t (#~s'[^|]|'' 
+
+;(o:walk-tree-atoms (lambda (x) (#~s'[^|]|'' x))      ; The value NIL is not of type STRING
+;(o:walk-tree-atoms (lambda (x) (unless (eq x nil) (#~s'[^|]+\|'' x)))
+;(o:walk-tree (lambda (x) (and (atom x) (not (eq x nil))) (#~s'[^|]+\|'' x))
+;(o:walk-tree-atoms (lambda (x) (unless (eq x nil) (setf x (#~s'[^|]+\|'' x))))
+
+(funcall (o:ttrav #'cons (lambda (stg) (if (stringp stg) (#~s'[^|]+\|'' stg) stg)))
+  (with-open-file (i "temp1") (make-tree i))))))
+
+
+
+;(o:p replace-string (o:ttrav #'cons (lambda (stg)
+;                                      (if (stringp stg) (#~s'(.+\|.+\|.+)\|(.*)$'\1\2's stg) stg))))
+
+;(funcall replace-string lst)
 
 
 @END
@@ -367,3 +405,61 @@
 
 ; ev make a fork in git
 ; 8.7.15 damit scheint mark comments besser zu gehen, es werden viel merhr bars inseriert <-----
+#;(defun uc-header (strg)
+  "remove linebreaks from upper case header"
+  (let ((regex1 "\\s*\\n\\s*(?=\\([\\dV]?\\d\\d-[\\dV]?\\d\\d\\))|\\s*\\n\\s*(?=\\(00\\))") ;alternative is only for chapt 0 interventi
+        (lookbehind "(?<!ECHO)(?<!NIA)(?<! [ABC])(?<![a-z]')(?<! DNA)(?<!IV)(?<!II)(?<!- I)(?<!SAI)(?<=[A-Z,'])")
+        (regex2 "\\s*-?\\n\\s*(?=[A-Z,'])"))
+    (ppcre:regex-replace "CON NETTIVO"
+      (ppcre:regex-replace-all (ppcre:create-scanner (format nil "~a~a|~a~a" lookbehind regex1 lookbehind regex2) :multi-line-mode t) strg " ")
+      "CONNETTIVO")))
+
+;    (#~s'CON NETTIVO'CONNETTIVO' (#~s/(ppcre:create-scanner (format nil "~a~a|~a~a" lookbehind regex1 lookbehind regex2) :multi-line-mode t)//g strg))))
+;
+;    (#~s'CON NETTIVO'CONNETTIVO' (#~s/(format nil "~a~a|~a~a" lookbehind regex1 lookbehind regex2)/""/gm strg))))
+
+#;(defun tag-items (lst strg)
+  "return a tagged string"
+  (flet ((fns ()
+           (mapcar (lambda (x)
+                     (lambda (s)
+                       (if (eql :h2 (car x)) ;in case of h2 also invert text and key
+                         (ppcre:regex-replace-all (ppcre:create-scanner (cadr x) :multi-line-mode t) s "§\\2 \\1")
+                         (ppcre:regex-replace-all (ppcre:create-scanner (cadr x) :multi-line-mode t) s "§\\1"))))
+                   lst)))
+    (eval `(funcall (stdutils:compose ,@(fns)) ,strg))))
+
+#;(defun grklammer-fns (alist) 
+  (mapcar (lambda (ai) ; alist-item
+            (lambda (item)
+              (if (string= (car ai) (key item)) 
+                (ppcre:regex-replace (ppcre:create-scanner "(?<=\\|).*" :single-line-mode t) item (cdr ai))
+                item)))
+          alist))
+
+
+
+#;(defun longcode-fns (alist) 
+  (mapcar (lambda (ai) ; alist-item
+            (lambda (strg)
+              (if (ppcre:scan (format nil "^~a\\d" (car ai)) strg)
+                (ppcre:regex-replace (cdr ai) strg "")
+                strg)))
+          alist))
+
+#;(defun insert-h1 (lst)
+  (let ((h1 ""))
+    (mapcar (lambda (x)
+              ; match 01|1. text  - i.e. 2 digits, bar, 1-2 digits, period and space, (h2i does match 01| too)
+              (fare-utils:acond ((ppcre:scan-to-strings "^\\d{2}(?=\\|\\d{1,2}\\. )" x) (setf h1 (format nil "~a." fare-utils:it)) x)  
+                       (t (lol:mkstr h1 x))))
+            lst)))
+
+
+              ; match 01|1. text  - i.e. 2 digits, bar, 1-2 digits, period and space, (h2i does match 01| too)
+              ;
+              ;
+              ;              (fare-utils:acond ((ppcre:scan-to-strings "^\\d{2}(?=\\|\\d{1,2}\\. )" x) (setf h1 (format nil "~a." fare-utils:it)) x)  
+;              (pre:ifmatch (#~m/"^\\d{2}(?=\\|\\d{1,2}\\. )"/ x) 
+
+

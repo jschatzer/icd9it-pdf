@@ -89,7 +89,6 @@
 (defun manbar (item)
   (bar-h item man-ht #'defmanbar))
 
-
 (defparameter off-ht (make-hash-table :test #'equal) "official-code-ht")
 
 (icd:string-l (icd:afts (icd:re-fns *edit-official-code*) (stdutils:slurp-file "~/Programming/Projects/IcdIt2007/icd9cm_24.csv"))
@@ -109,6 +108,8 @@
 ;------------
 (defun tune-items (lst)
   (icd:aftl (#'accented-chrs #'grklammer #'longcode1 #'longcode2) lst))
+#;(defun tune-items (lst)
+  (accented-chrs (grklammer (longcode1 (longcode2 lst)))))
 
 (defun grklammer (item)
   (icd:afts (grklammer-fns *grkl*) item))
@@ -124,7 +125,7 @@
 (let ((rmtxt "")) 
   (defun longcode-h (item)
     (cond ((or (l1k item) (l2k item)) (setf rmtxt (subseq item 6 (1- (length item)))) item)
-          (t (ppcre:regex-replace " , " (ppcre:regex-replace (ppcre:quote-meta-chars rmtxt) item "") " ")))))
+          (t (#~s' , ' ' (#~s/(ppcre:quote-meta-chars rmtxt)/""/ item))))))
 
 (defun l1k (item)
   (find (icd:key item) *l1keys* :test #'equal))
@@ -145,20 +146,48 @@
 (defun insert-h2 (lst)
   (let ((h2 ""))
     (mapcar (lambda (x)
-              (fare-utils:acond ((ppcre:scan "^\\d{2}(?=\\|\\d{1,2}\\. )" x) (setf h2 "") x)  ; h2 "" brauchts  für chapt 4, das keine h2 hat !!
-                       ((ppcre:scan-to-strings "^[V\\d]{6}(?=\\|)" x) (setf h2 (format nil "~a." fare-utils:it)) x) ; point hier sonst wird "04..280.0|280.0 output
-                       (t (lol:mkstr h2 x))))
+              (cond ((#~m'^\d{2}(?=\|\d{1,2}\. )' x) (setf h2 "") x)  ; h2 "" brauchts  für chapt 4, das keine h2 hat !!
+                    ((pre:whenmatch (#~m'^([V\d]{6})(?=\|)' x) (setf h2 (#~s'$'.' $1))) x) ; point hier sonst wird "04..280.0|280.0 output
+                    (t (lol:mkstr h2 x))))
             lst)))
 
+;das geht <----
 (defun insert-h2a (lst)
   "chapt 5 hat überzähligen header, PSICOSI (290-299), 5.11.13 geht, ebenso chapt 17 fratture, ferite.
   h2a for lack of a better name, ev h2bis"
   (mapcar (lambda (x)
-            (cond ((ppcre:scan "^290294|^295299" x) (lol:mkstr "290299." x)) ; psicosi
-                  ((ppcre:scan "^800804|^805809|^810819|^820829" x) (lol:mkstr "800829." x))   ;fratture
-                  ((ppcre:scan "^870879|^880887|^890897" x) (lol:mkstr "870897." x))   ;ferite
+            (cond ((#~m'^290294|^295299' x) (lol:mkstr "290299." x)) ; psicosi
+                  ((#~m'^800804|^805809|^810819|^820829' x) (lol:mkstr "800829." x))   ;fratture
+                  ((#~m'^870879|^880887|^890897' x) (lol:mkstr "870897." x))   ;ferite
                   (t x)))
           lst))
+
+;geht nicht, warum?
+#;(defun insert-h2a (lst)
+  "chapt 5 hat überzähligen header, PSICOSI (290-299), 5.11.13 geht, ebenso chapt 17 fratture, ferite.
+  h2a for lack of a better name, ev h2bis"
+  (mapcar (lambda (x)
+            (or (#~s'^290294|^295299'290299.' x) ; psicosi
+                (#~s'^800804|^805809|^810819|^820829'800829.' x)   ;fratture
+                (#~s'^870879|^880887|^890897'870897.' x)   ;ferite
+                x))
+          lst))
+;geht auch nicht
+#;(defun insert-h2a (lst)
+  "chapt 5 hat überzähligen header, PSICOSI (290-299), 5.11.13 geht, ebenso chapt 17 fratture, ferite.
+  h2a for lack of a better name, ev h2bis"
+  (mapcar (lambda (x)
+            (or (#~s'(^290294|^295299)'290299.' x) ; psicosi
+                (#~s'(^800804|^805809|^810819|^820829)'800829.' x)   ;fratture
+                (#~s'(^870879|^880887|^890897)'870897.' x)   ;ferite
+                x))
+          lst))
+
+
+
+
+
+
 
 ;------------
 ;WORKFLOW 8 create-perlarry-file
@@ -208,6 +237,92 @@
   "655.2 - im txt from pdf ist eine neue Zeile sowie ' strange char zwischen code und Beschreibung"
   (let ((page (#~s/"655.2[\\n\\s']+"/"655.2 "/ (nth 221 lst))))
   (substitute (nth 221 lst) page :test 'equal)))
+
+
+#;(let ((rmtxt "")) 
+  (defun longcode-h (item)
+    (cond ((or (l1k item) (l2k item)) (setf rmtxt (subseq item 6 (1- (length item)))) item)
+          (t (ppcre:regex-replace " , " (ppcre:regex-replace (ppcre:quote-meta-chars rmtxt) item "") " ")))))
+
+(let ((rmtxt "")) 
+  (defun longcode-h (item)
+    (cond ((or (l1k item) (l2k item)) (setf rmtxt (subseq item 6 (1- (length item)))) item)
+;          (t (#~s' , ' ' (ppcre:regex-replace (ppcre:quote-meta-chars rmtxt) item ""))))))
+          (t (#~s' , ' ' (#~s/(ppcre:quote-meta-chars rmtxt)/""/ item))))))
+
+#;(defun insert-h2a (lst)
+  "chapt 5 hat überzähligen header, PSICOSI (290-299), 5.11.13 geht, ebenso chapt 17 fratture, ferite.
+  h2a for lack of a better name, ev h2bis"
+  (mapcar (lambda (x)
+            (cond ((ppcre:scan "^290294|^295299" x) (lol:mkstr "290299." x)) ; psicosi
+                  ((ppcre:scan "^800804|^805809|^810819|^820829" x) (lol:mkstr "800829." x))   ;fratture
+                  ((ppcre:scan "^870879|^880887|^890897" x) (lol:mkstr "870897." x))   ;ferite
+                  (t x)))
+          lst))
+
+
+;geht nicht
+#;(defun insert-h2a (lst)
+  "chapt 5 hat überzähligen header, PSICOSI (290-299), 5.11.13 geht, ebenso chapt 17 fratture, ferite.
+  h2a for lack of a better name, ev h2bis"
+  (mapcar (lambda (x)
+            (cond ((#~s'(^290294|^295299)'290299.\1' x)) ; psicosi
+                  ((#~s'(^800804|^805809|^810819|^820829)'800829.\1' x))   ;fratture
+                  ((#~s'(^870879|^880887|^890897)'870897\1' x))   ;ferite
+                  (t x)))
+          lst))
+
+;geht nicht
+#;(defun insert-h2a (lst)
+  "chapt 5 hat überzähligen header, PSICOSI (290-299), 5.11.13 geht, ebenso chapt 17 fratture, ferite.
+  h2a for lack of a better name, ev h2bis"
+  (mapcar (lambda (x)
+            (or (#~s'(^290294|^295299)'290299.\1' x) ; psicosi
+                (#~s'(^800804|^805809|^810819|^820829)'800829.\1' x)   ;fratture
+                (#~s'(^870879|^880887|^890897)'870897\1' x)   ;ferite
+                x))
+          lst))
+
+; mit ifmatch   <------  test
+#;(defun insert-h2 (lst)
+  (let ((h2 ""))
+    (mapcar (lambda (x)
+              (fare-utils:acond ((ppcre:scan "^\\d{2}(?=\\|\\d{1,2}\\. )" x) (setf h2 "") x)  ; h2 "" brauchts  für chapt 4, das keine h2 hat !!
+                                ((ppcre:scan-to-strings "^[V\\d]{6}(?=\\|)" x) (setf h2 (format nil "~a." fare-utils:it)) x) ; point hier sonst wird "04..280.0|280.0 output
+                                (t (lol:mkstr h2 x))))
+            lst)))
+
+
+
+;gehen nicht
+#;(defun insert-h2 (lst)
+  (let ((h2 ""))
+    (mapcar (lambda (x)
+              (cond ((#~m'^\\d{2}(?=\|\d{1,2}\. )' x) (setf h2 "") x)  ; h2 "" brauchts  für chapt 4, das keine h2 hat !!
+                    ((pre:ifmatch (#~m'^[V\d]{6}(?=\|)' x) (setf h2 (format nil "~a." $1))) x) ; point hier sonst wird "04..280.0|280.0 output
+                    (t (lol:mkstr h2 x))))
+            lst)))
+
+#;(defun insert-h2 (lst)
+  (let ((h2 ""))
+    (mapcar (lambda (x)
+              (cond ((#~m'^\\d{2}(?=\|\d{1,2}\. )' x) (setf h2 "") x)  ; h2 "" brauchts  für chapt 4, das keine h2 hat !!
+                    ((#~m'^[V\d]{6}(?=\|)' x) (setf h2 (format nil "~a." (#~m'^[V\d]{6}(?=\|)' x))) x) ; point hier sonst wird "04..280.0|280.0 output
+                    (t (lol:mkstr h2 x))))
+            lst)))
+
+
+
+
+
+; there ar 3 conditons!!
+#;(defun insert-h2 (lst)
+  (let ((h2 ""))
+    (mapcar (lambda (x)
+              (pre:ifmatch (#~m'^(\d\d)\|\d{1,2}\. ' x)
+                           (progn (setf h2 "") x)  ; h2 "" brauchts  für chapt 4, das keine h2 hat !!
+                           (lol:mkstr h2 x)))
+            lst)))
 
 
 
