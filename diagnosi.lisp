@@ -5,7 +5,7 @@
 ;;; test, 15.11.13
 ;;; ("V02.69" "574.71" "574.70" "574.41" "574.40" "574.31" "574.30" "Setticemia")   ;; <--------- 
 (defun pages ()
-  (pdf-to-pages "Diagnosi.pdf" *chapters* 20))
+  (icd:pdf-to-pages "Diagnosi.pdf" *chapters* 20))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;,
 
 ;--------------
@@ -39,7 +39,7 @@
       (mark-comments  ;W4
         (column-to-items   ;W3
           (pages-to-column     ;W2
-            (pdf-to-pages "Diagnosi.pdf" *chapters* chapter))))))) ;W1
+            (icd:pdf-to-pages "Diagnosi.pdf" *chapters* chapter))))))) ;W1
 
 ;------------
 ;WORKFLOW 1 pdf-to-pages
@@ -48,11 +48,11 @@
 ;WORKFLOW 2 pages-to-column
 ;------------
 (defun pages-to-column (lst)
-  (stdutils:list-to-delimited-string (icd:aftl (#'split-page #'edit-single-page #'pad-text) (c655.2 lst))))
+  (stdutils:list-to-delimited-string (icd:aftl (#'icd:split-page #'edit-single-page #'icd:pad-text) (c655.2 lst))))
 
 (defun edit-single-page (page)
   "reduce spaces between key and text, to enable page-splitting"
-    (edit-single-page-helper page *tagged-entries*))
+    (icd:edit-single-page-helper page *tagged-entries*))
 
 (defun c655.2 (lst) ;; 9.7.15 subst only this page
   "655.2 - im txt from pdf ist eine neue Zeile sowie ' strange char zwischen code und Beschreibung, malattia...che puo' colpire...."
@@ -64,7 +64,7 @@
 ;------------
 (defun column-to-items (stg)
   "convert a single-column-string to a list of items"
-  (string-to-list (edit-column (uc-header (optimize-text (icd:reduce-space stg))))))
+  (string-to-list (edit-column (icd:uc-header (icd:optimize-text (icd:reduce-space stg))))))
 
 (defun string-to-list (stg)
   (split-into-items (tag-items *tag-re* stg))) ;re for regular-expressions
@@ -81,13 +81,13 @@
 (defun insert-bar (item)
   (or (offbar item)
       (manbar item)
-      (defmanbar (connect-first2lines-if- item))))
+      (icd:defmanbar (icd:connect-first2lines-if- item))))
 
 (defun offbar (item)
-  (bar-h item off-ht #'manbar))
+  (icd:bar-h item off-ht #'manbar))
 
 (defun manbar (item)
-  (bar-h item man-ht #'defmanbar))
+  (icd:bar-h item man-ht #'defmanbar))
 
 (defparameter off-ht (make-hash-table :test #'equal) "official-code-ht")
 
@@ -95,27 +95,27 @@
   (setf (gethash (icd:key stdutils:it) off-ht) stdutils:it))
 
 (defparameter man-ht (make-hash-table :test #'equal) "manual-bar-ht")
-(load-ht man-ht *man-ht*)
+(icd:load-ht man-ht *man-ht*)
 
 ;------------
 ;WORKFLOW 5 complete-code
 ;------------
 (defun complete-code (items)
-  (complete-code-h items *new-codes* *c* off-ht))
+  (icd:complete-code-h items *new-codes* *c* off-ht))
 
 ;------------
 ;WORKFLOW 6 tune-items
 ;------------
 (defun tune-items (lst)
-  (icd:aftl (#'accented-chrs #'grklammer #'longcode1 #'longcode2) lst))
+  (icd:aftl (#'icd:accented-chrs #'grklammer #'longcode1 #'longcode2) lst))
 #;(defun tune-items (lst)
   (accented-chrs (grklammer (longcode1 (longcode2 lst)))))
 
 (defun grklammer (item)
-  (icd:afts (grklammer-fns *grkl*) item))
+  (icd:afts (icd:grklammer-fns *grkl*) item))
 
 (defun longcode1 (item)
-  (icd:afts (longcode-fns *longcode*) item))
+  (icd:afts (icd:longcode-fns *longcode*) item))
 
 (defun longcode2 (item)
   (longcode-h item))
@@ -141,7 +141,7 @@
 ;------------
 ; chapt 4 u 14 haben keine h2
 (defun insert-path (lst)
-  (funcall (stdutils:compose #'insert-h1 #'insert-h2a #'insert-h2 #'insert-key) lst))
+  (funcall (stdutils:compose #'icd:insert-h1 #'insert-h2a #'insert-h2 #'icd:insert-key) lst))
 
 (defun insert-h2 (lst)
   (let ((h2 ""))
@@ -195,7 +195,8 @@
 
 ;benchmark
 (defun benchmark-diagnosi ()
-(time (o:p pdf-to-pages (icd9dg::pdf-to-pages "Diagnosi.pdf" icd9dg::*chapters* 20)))
+;(time (o:p pdf-to-pages (icd9dg::pdf-to-pages "Diagnosi.pdf" icd9dg::*chapters* 20)))
+(time (o:p pdf-to-pages (icd:pdf-to-pages "Diagnosi.pdf" icd9dg::*chapters* 20)))
 (time (o:p pages-to-column (icd9dg::pages-to-column pdf-to-pages)))
 (time (o:p column-to-items (icd9dg::column-to-items pages-to-column)))
 (time (o:p mark-comments (icd9dg::mark-comments column-to-items)))

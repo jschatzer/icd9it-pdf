@@ -47,16 +47,19 @@ create-lisptree-file
    #:key-from-bar-all))
 
 (defpackage #:icd9dg
-  (:use #:cl #:icd)
+;  (:use #:cl #:icd)
+  (:use #:cl)
   (:export #:pdf-to-perlarray))
 
 (defpackage #:icd9th
-  (:use #:cl #:icd)
+;  (:use #:cl #:icd)
+  (:use #:cl)
   (:export #:pdf-to-perlarray))
 
 ;(defpackage #:icd9
 (defpackage #:icd9it-pdf
-  (:use #:cl #:icd)
+;  (:use #:cl #:icd)
+  (:use #:cl)
   (:export #:icd-dg-th
 perlarray-to-lisptree
    ))
