@@ -80,11 +80,28 @@
       (manbar item)
       (icd:defmanbar (icd:connect-first2lines-if- item))))
 
+
+
 (defun offbar (item)
   (icd:bar-h item off-ht #'manbar))
 
 (defun manbar (item)
-  (icd:bar-h item man-ht #'defmanbar))
+  (icd:bar-h item man-ht #'icd:defmanbar))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;
+#;(defun insert-bar (i)
+  (or (code-bar i)
+      (head-bar i)
+      (icd:defmanbar (icd:connect-first2lines-if- i))))
+
+(defun code-bar (i) (icd:insert-hash-controlled-bar i off-ht))
+(defun head-bar (i) (icd:insert-hash-controlled-bar i man-ht))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
 
 (defparameter off-ht (make-hash-table :test #'equal) "official-code-ht")
 
@@ -162,7 +179,7 @@
 ;;WORKFLOW 7 insert-path
 ;------------
 (defun insert-path (lst)
-  (funcall (stdutils:compose #'insert-h1 #'insert-key) lst))
+  (funcall (stdutils:compose #'icd:insert-h1 #'icd:insert-key) lst))
 
 ;------------
 ;WORKFLOW 8 create-perlarry-file

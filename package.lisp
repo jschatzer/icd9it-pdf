@@ -29,6 +29,7 @@ reduce-space
    #:defoffbar
    #:defmanbar  
    #:bar-h
+insert-hash-controlled-bar
    ;W5
    #:complete-code-h
    ;W6

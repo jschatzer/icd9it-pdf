@@ -22,7 +22,7 @@
 (defun items ()
   (column-to-items 
     (pages-to-column 
-      (pdf-to-pages "Diagnosi.pdf" *chapters* 20))))
+      (icd:pdf-to-pages "Diagnosi.pdf" *chapters* 20))))
 
 (defparameter items (stdutils:memoize #'items))
 
@@ -67,7 +67,7 @@
   (string-to-list (edit-column (icd:uc-header (icd:optimize-text (icd:reduce-space stg))))))
 
 (defun string-to-list (stg)
-  (split-into-items (tag-items *tag-re* stg))) ;re for regular-expressions
+  (icd:split-into-items (icd:tag-items *tag-re* stg))) ;re for regular-expressions
 
 (defun edit-column (stg)
   (icd:afts (icd:re-fns *column-edits* :m t) stg))
@@ -87,7 +87,7 @@
   (icd:bar-h item off-ht #'manbar))
 
 (defun manbar (item)
-  (icd:bar-h item man-ht #'defmanbar))
+  (icd:bar-h item man-ht #'icd:defmanbar))
 
 (defparameter off-ht (make-hash-table :test #'equal) "official-code-ht")
 
