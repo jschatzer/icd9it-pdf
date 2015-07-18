@@ -30,6 +30,8 @@ reduce-space
    #:defmanbar  
    #:bar-h
 insert-hash-controlled-bar
+default-code-bar
+default-head-bar
    ;W5
    #:complete-code-h
    ;W6

@@ -90,15 +90,39 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;debugger invoked on a TYPE-ERROR in thread #<THREAD "main thread" RUNNING {1002D4E6C3}>: The value NIL is not of type UNSIGNED-BYTE
 #;(defun insert-bar (i)
   (or (code-bar i)
       (head-bar i)
       (icd:defmanbar (icd:connect-first2lines-if- i))))
 
+;(ICD:COMPLETE-CODE-H #<unavailable argument> ("90.0" "90.1" "90.2" "90.3" "90.4" "90.5" "90.6" "90.7" "90.8
+#;(defun insert-bar (i)
+  (or (code-bar i)
+      (head-bar i)
+      (icd:defmanbar (icd:connect-first2lines-if- i))
+      (#~s'$'XXX' i)))
+
+#;(defun insert-bar (i)
+  (or (code-bar i)
+      (head-bar i)
+      (icd:default-head-bar (icd:connect-first2lines-if- i))
+      (#~s'$'XXX' i)))
+
+#;(defun insert-bar (i)
+  (or (code-bar i)
+      (head-bar i)
+      (icd:default-head-bar (icd:connect-first2lines-if- i))))
+
+
+
+
 (defun code-bar (i) (icd:insert-hash-controlled-bar i off-ht))
 (defun head-bar (i) (icd:insert-hash-controlled-bar i man-ht))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;
+;default-code-bar
+;default-head-bar
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 

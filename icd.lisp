@@ -231,10 +231,15 @@
           (setf (gethash (key i) ht) i))
         lst))
 
-;;;;;
-(defun insert-hash-controlled-bar% (i c &aux (p (length c))) (lol:mkstr (subseq i 0 p) #\| (subseq i p)))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;(defun insert-hash-controlled-bar% (i c &aux (p (length c))) (lol:mkstr (subseq i 0 p) #\| (subseq i p)))
+; nil as return-value of gethash is a valid parameter for lenght
+(defun insert-hash-controlled-bar% (i c &aux (p (length c))) (unless (eq c nil) (lol:mkstr (subseq i 0 p) #\| (subseq i p))))  ; ev use stringp
 (defun insert-hash-controlled-bar (i h) (insert-hash-controlled-bar% i (gethash (key i) h)))
 
+(defun default-code-bar (i) "default code bar, on end of item" (rm-nsb (#~s'$'|' i)))
+(defun default-head-bar (i) "default header bar, on end of 1. line" (#~s'\n'|' i))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;------------
 ;WORKFLOW 5 complete-items
