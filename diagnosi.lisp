@@ -16,7 +16,7 @@
                 (pdf-to-items)
                 (pdf-to-items-t chapter))))
 ;    (create-perlarry-file strg "~/src/lisp/icd9it-pdf/Data/dataDiagnosi")))
-    (icd:create-perlarry-file strg "~/src/lisp/icd9it-pdf/data/dataDiagnosi_4")))
+    (icd:create-perlarry-file strg "~/src/lisp/icd9it-pdf/data/dataDiagnosi_9")))
 
 
 (defun items ()
@@ -75,41 +75,37 @@
 ;------------
 ;WORKFLOW 4 mark-comments
 ;------------
-(defun mark-comments (lst)
-  (mapcar #'insert-bar lst))
+(defun mark-comments (lst) (mapcar #'insert-bar lst))
+(defun insert-bar (i) (or (code-bar i) (header-bar i)))
 
-(defun insert-bar (item)
-  (or (offbar item)
-      (manbar item)
-      (icd:defmanbar (icd:connect-first2lines-if- item))))
+(defparameter code-ht (make-hash-table :test #'equal))
+(icd:load-ht code-ht "~/Programming/Projects/IcdIt2007/icd9cm_24.csv")
 
-(defun offbar (item)
-  (icd:bar-h item off-ht #'manbar))
+(defun code-bar (i)
+	(lol:aif (gethash (icd:key i) code-ht)
+					 (or (ignore-errors (icd::rm-nsb (#~s/(format nil "(?<=~a)$" (ppcre:quote-meta-chars lol:it))/"|"/im (#~s' $'' i))))
+							 (cond ((member (icd:key i) *cbar3* :test #'string=) (icd::rm-nsb (#~s'(\n.+\n.+)\n'\1|' i)))
+										 ((member (icd:key i) *cbar2* :test #'string=) (icd::rm-nsb (#~s'(\n.+)\n'\1|' i)))
+										 (t (#~s'\n'|' i))))))
 
-(defun manbar (item)
-  (icd:bar-h item man-ht #'icd:defmanbar))
-
-(defparameter off-ht (make-hash-table :test #'equal) "official-code-ht")
-
-(icd:string-l (icd:afts (icd:re-fns *edit-official-code*) (stdutils:slurp-file "~/Programming/Projects/IcdIt2007/icd9cm_24.csv"))
-  (setf (gethash (icd:key stdutils:it) off-ht) stdutils:it))
-
-(defparameter man-ht (make-hash-table :test #'equal) "manual-bar-ht")
-(icd:load-ht man-ht *man-ht*)
+(defun header-bar (i)
+	(cond	((member (icd:key i) *hbar4* :test #'string=) (icd::rm-nsb (#~s'(\n.+\n.+\n.+)\n'\1|' i)))  
+				((member (icd:key i) *hbar3* :test #'string=) (icd::rm-nsb (#~s'(\n.+\n.+)\n'\1|' i)))
+				((member (icd:key i) *hbar2* :test #'string=) (icd::rm-nsb (#~s'(\n.+)\n'\1|' i)))
+				(t (#~s'\n'|' i))))
 
 ;------------
 ;WORKFLOW 5 complete-code
 ;------------
+;test
 (defun complete-code (items)
-  (icd:complete-code-h items *new-codes* *c* off-ht))
+  (icd:complete-code-h items *new-codes* *c* code-ht))
 
 ;------------
 ;WORKFLOW 6 tune-items
 ;------------
 (defun tune-items (lst)
   (icd:aftl (#'icd:accented-chrs #'grklammer #'longcode1 #'longcode2) lst))
-#;(defun tune-items (lst)
-  (accented-chrs (grklammer (longcode1 (longcode2 lst)))))
 
 (defun grklammer (item)
   (icd:afts (icd:grklammer-fns *grkl*) item))
@@ -325,5 +321,227 @@
                            (lol:mkstr h2 x)))
             lst)))
 
+
+(defun insert-bar (i)
+	(or (code-bar i)
+			(cond ((member (icd:key i) icd9dg::*hbar3* :test #'string=) (icd::rm-nsb (#~s'(\n.+\n.+)\n'\1|' i)))
+						((member (icd:key i) icd9dg::*hbar2* :test #'string=) (icd::rm-nsb (#~s'(\n.+)\n'\1|' i)))
+						(t (#~s'\n'|' i)))))
+
+(defun mark-comments (lst)
+  (mapcar #'insert-bar lst))
+
+(defun insert-bar (item)
+  (or (offbar item)
+      (manbar item)
+      (icd:defmanbar (icd:connect-first2lines-if- item))))
+
+(defun offbar (item)
+  (icd:bar-h item off-ht #'manbar))
+
+(defun manbar (item)
+  (icd:bar-h item man-ht #'icd:defmanbar))
+
+;;;;;;;;;;;;;;;;;;;;;;
+#|
+(defun insert-bar (item)
+	(if (codep x)
+		(code-bars ...)
+		(cond ((member (key i) icd9dg::*hbar3*) (icd:rm-nsb (#~s'(\n.+\n.+)\n'\1|' i)))
+					((member (key i) icd9dg::*hbar2*) (icd:rm-nsb (#~s'(\n.+)\n'\1|' i)))
+					(t (#~s'\n'|' i)))))
+|#
+
+(defun insert-bar (i)
+	(or (offbar i)
+			;(manbar i)
+			(cond ((member (icd:key i) icd9dg::*hbar3* :test #'string=) (icd::rm-nsb (#~s'(\n.+\n.+)\n'\1|' i)))
+						((member (icd:key i) icd9dg::*hbar2* :test #'string=) (icd::rm-nsb (#~s'(\n.+)\n'\1|' i)))
+						(t (#~s'\n'|' i)))))
+
+
+
+
+
+#|
+(defun insert-bar (i)
+  (code-bar i))
+
+
+(defun code-bar (i) (icd:insert-hash-controlled-bar i off-ht))
+(defun head-bar (i) (icd:insert-hash-controlled-bar i man-ht))
+|#
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+(defparameter off-ht (make-hash-table :test #'equal) "official-code-ht")
+
+(icd:string-l (icd:afts (icd:re-fns *edit-official-code*) (stdutils:slurp-file "~/Programming/Projects/IcdIt2007/icd9cm_24.csv"))
+  (setf (gethash (icd:key stdutils:it) off-ht) stdutils:it))
+
+(defparameter man-ht (make-hash-table :test #'equal) "manual-bar-ht")
+(icd:load-ht man-ht *man-ht*)
+
+
+(defun insert-bar (i)
+	(or (offbar i)
+			;(manbar i)
+			(cond ((member (icd:key i) icd9dg::*hbar3* :test #'string=) (icd::rm-nsb (#~s'(\n.+\n.+)\n'\1|' i)))
+						((member (icd:key i) icd9dg::*hbar2* :test #'string=) (icd::rm-nsb (#~s'(\n.+)\n'\1|' i)))
+						(t (#~s'\n'|' i)))))
+
+
+
+
+
+#|
+(defun insert-bar (i)
+  (code-bar i))
+
+
+(defun code-bar (i) (icd:insert-hash-controlled-bar i off-ht))
+(defun head-bar (i) (icd:insert-hash-controlled-bar i man-ht))
+|#
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+(defparameter off-ht (make-hash-table :test #'equal) "official-code-ht")
+
+(icd:string-l (icd:afts (icd:re-fns *edit-official-code*) (stdutils:slurp-file "~/Programming/Projects/IcdIt2007/icd9cm_24.csv"))
+  (setf (gethash (icd:key stdutils:it) off-ht) stdutils:it))
+
+(defparameter man-ht (make-hash-table :test #'equal) "manual-bar-ht")
+(icd:load-ht man-ht *man-ht*)
+
+;;;;;;;;;;;;;;;;;;;;;;
+(with-open-file (s "~/Programming/Projects/IcdIt2007/icd9cm_24.csv")
+	(loop for i = (read-line s nil) 
+				while i do 
+				;(setf (gethash (icd:key i) code-ht) (#~s'.* (\w+)'\1' i)))) ; geht nicht wegen  "...PERFRINGENS (C. WELCHII)"
+				(setf (gethash (icd:key i) code-ht) (#~s'.* ([^\s]+)'\1' i))))
+
+
+#;(defun code-bar (i)
+	(let ((m (gethash (icd:key i) icd9dg::code-ht)))
+		(icd::rm-nsb (#~s/(format nil "(?<=~a)" m)/"|"/i i))))
+
+ 
+(defun code-bar (i)
+	(lol:aif (gethash (icd:key i) icd9dg::code-ht)
+;		(icd::rm-nsb (#~s/(format nil "(?<=~a)" lol:it)/"|"/i i))))
+		(icd::rm-nsb (#~s/(format nil "(?<=~a)" (ppcre:quote-meta-chars lol:it))/"|"/i i))))
+
+
+
+
+(defun code-bar (i)
+	(lol:aif (gethash (icd:key i) icd9dg::code-ht)
+		(#~s/(format nil "(?<=~a)" lol:it)/"|"/i i)))
+
+
+
+#;(defun code-bar (i)
+	(lol:aif (gethash (icd:key i) icd9dg::code-ht)
+					 (icd::rm-nsb (or (#~s/(format nil "(?<=~a)" lol:it)/"|"/i i)
+														(lol:mkstr "ERROR" i)))))
+
+
+
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;
+#|
+(defun insert-bar (item)
+	(if (codep x)
+		(code-bars ...)
+		(cond ((member (key i) icd9dg::*hbar3*) (icd:rm-nsb (#~s'(\n.+\n.+)\n'\1|' i)))
+					((member (key i) icd9dg::*hbar2*) (icd:rm-nsb (#~s'(\n.+)\n'\1|' i)))
+					(t (#~s'\n'|' i)))))
+|#
+
+;edit csv entries
+; 1);295.82 ALTRI TIPI SPECIFICATI DI SCHIZOFRENIA,CRONICO     ; comma space
+;edit items
+; 2)   adb-     trennstrich on first line das sind viele, 
+;"360.61 Corpo estraneo nella camera ante- 
+;  iore"
+
+#;(with-open-file (s "~/Programming/Projects/IcdIt2007/icd9cm_24.csv")
+	(loop for i = (read-line s nil) 
+				while i do 
+				(setf (gethash (icd:key i) code-ht) (#~s'.* ([^\s]+)'\1' i))))  ; ) ]  may be on end of string
+;				(setf (gethash (icd:key i) code-ht) (#~s'.* ([^\s]+)'\1' (#~s',', 'g i)))))  ; ) ]  may be on end of string
+
+;				(setf (gethash (icd:key i) code-ht) (#~s'.*(..)'\1' i))))
+;				(setf (gethash (icd:key i) code-ht) (#~s'.*([^\s]{2})\s*'\1' i))))  ;some lines end with space
+
+;geht nicht ??
+(defun create-ht (f)
+	(defparameter code-htX (make-hash-table :test #'equal))
+	(with-open-file (s f)
+		(loop for i = (read-line s nil) 
+					while i do 
+					(setf (gethash (icd:key i) code-ht) (#~s'.*(.\S)\s*'\1' i)))))  ;some lines end with space, -- there may be only 1 char: "002.1 Paratifo A"
+
+#;(defun create-ht (f)
+	(let ((code-ht% (make-hash-table :test #'equal)))
+		(declare (special code-ht%))
+		(with-open-file (s f)
+			(loop for i = (read-line s nil) 
+						while i do 
+						(setf (gethash (icd:key i) code-ht) (#~s'.*(.\S)\s*'\1' i))))))  ;some lines end with space, -- there may be only 1 char: "002.1 Paratifo A"
+
+
+
+
+;könnte gehen, return nil if i is not code
+#;(defun code-bar (i)
+	(lol:aif (gethash (icd:key i) code-ht)
+		(icd::rm-nsb (#~s/(format nil "(?<=~a)" (ppcre:quote-meta-chars lol:it))/"|"/i i))))
+
+#;(defun code-bar (i)
+	(lol:aif (gethash (icd:key i) code-ht)
+;		(icd::rm-nsb (#~s/(format nil "(?<=~a)" (ppcre:quote-meta-chars lol:it))/"|"/i i))))
+		(icd::rm-nsb (#~s/(format nil "(?<=~a)$" (ppcre:quote-meta-chars lol:it))/"|"/im i))))
+
+;;ev  manuell codes  <-----
+;pdf: 082.41 Erlichiosi Chaffensis
+;csv: 082.41 EHRLICHIA CHAFEENSIS (E.CHAFEENSIS)
+
+(defun code-bar (i)
+	(lol:aif (gethash (icd:key i) code-ht)
+		(icd::rm-nsb (#~s/(format nil "(?<=~a)$" (ppcre:quote-meta-chars lol:it))/"|"/im (#~s' $'' i)))))  ;some lines end with space
+
+
+#;(defun code-bar (i)
+	(lol:aif (gethash (icd:key i) code-ht)
+					 (cond ((member (icd:key i) *cbar3* :test #'string=) (icd::rm-nsb (#~s'(\n.+\n.+)\n'\1|' i)))
+								 ((member (icd:key i) *cbar2* :test #'string=) (icd::rm-nsb (#~s'(\n.+)\n'\1|' i)))
+								 ((member (icd:key i) *cbar1* :test #'string=) (#~s'\n'|' i))
+								 (t (icd::rm-nsb (#~s/(format nil "(?<=~a)$" (ppcre:quote-meta-chars lol:it))/"|"/im (#~s' $'' i)))))))
+
+;										 ((member (icd:key i) *cbar1* :test #'string=) (#~s'\n'|' i))
+;										 (t (icd::rm-nsb (#~s/(format nil "(?<=~a)$" (ppcre:quote-meta-chars lol:it))/"|"/im (#~s' $'' i)))))))
+
+
+
+#;(defun complete-code (items)
+  (icd:complete-code-h items *new-codes* *c* off-ht))
+
+#;(with-open-file (s "~/Programming/Projects/IcdIt2007/icd9cm_24.csv")
+	(loop for i = (read-line s nil) 
+				while i do 
+				(setf (gethash (icd:key i) code-ht) (#~s'.*(.\S)\s*'\1' i))))  ;some lines end with space, -- there may be only 1 char: "002.1 Paratifo A"
+
+(defun tune-items (lst)
+  (icd:accented-chrs (grklammer (longcode1 (longcode2 lst)))))
 
 

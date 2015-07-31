@@ -10,7 +10,7 @@
    afts
    re-fns
    string-l
-reduce-space
+
    ;W1
    #:pdf-to-pages
    ;W2
@@ -23,6 +23,8 @@ reduce-space
    #:uc-header
    #:tag-items
    #:split-into-items
+reduce-space
+reduce-space-first-line
    ;W4
    #:load-ht
    #:connect-first2lines-if-

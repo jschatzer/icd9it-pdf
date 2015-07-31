@@ -16,20 +16,13 @@
 		(let ((val (read-line str nil g)))
 			(unless (equal val g) (values val t)))))
 
-; 10.11.13
-; from icd9
-;(defun afts (strg fns)
-(defun afts (fns strg)
-  "for apply functions to scalar"
-    (eval `(funcall (stdutils:compose ,@fns) ,strg)))
-
-;usage:  (icd::aftl '(1 2 3) (#'1+ #'1+))
-;(defmacro aftl (lst fns)
-;analog: mapcar fn lst
-(defmacro aftl (fns lst)
-  "for apply functions to list"
-  `(mapcar (stdutils:compose ,@fns) ,lst))
-
+;geht nicht -- wieso??
+;(defmacro afts (fns stg) "for apply functions to scalar" `(funcall (stdutils:compose ,@fns) ,stg))
+(defun afts (fns stg) "for apply functions to scalar" (eval `(funcall (stdutils:compose ,@fns) ,stg)))
+(defmacro aftl (fns lst) "for apply functions to list" `(mapcar (stdutils:compose ,@fns) ,lst))
+(defun key (s) "return the key of an entry" (#~s'\s.*''s s)) ;(key "123 CodeText") ; "123"
+;(defun key (line) "return the key of an entry" (subseq line 0 (position #\space line))) ;(key "123 CodeText") ; "123"
+ 
 (defun re-fns (alist &key m)
   "return a list of string-replace-functions, i.e reg expr functions,
   they want a string as input
@@ -46,17 +39,6 @@
   from http://stackoverflow.com/questions/4387570/in-common-lisp-how-can-i-insert-an-element-into-a-list-in-place"
   (push newelt (cdr (nthcdr index lst)))
   lst)
-
-#|
-;geht anscheinend wegen #'key nicht ??, warum??
-(defun key (s)
-  "return the key of an entry" ;(key "123 CodeText") ; "123"
-  (#~s'\s.*'' s))
-|#
-
-(defun key (line)
-	  "return the key of an entry" ;(key "123 CodeText") ; "123"
-	  (subseq line 0 (position #\space line)))
 
 (defun key-from-bar-all (line)
   "return the key from 1.bar to space, >with< points, parenthesis and slash"
@@ -191,9 +173,30 @@
        (format l "~a~%" (#~s' +' 'g stdutils:it))
        (format l "~a~%" stdutils:it)))))
 
+;scheint gleich gut zu gehen
+(defun reduce-space-first-line (i) 
+  (#~s'\s+(?=.*\n)' ' i))
+
 ;------------
 ;WORKFLOW 4 mark comments
 ;------------
+(defun mk-code-ht (n f) ;ht-name csv-file
+	(let ((code-ht (make-hash-table :test #'equal)))
+		(declare (special code-ht))
+		(with-open-file (s f)
+			(loop for i = (read-line s nil) 
+						while i do 
+						(setf (gethash (icd:key i) code-ht) (#~s'.*(.\S)\s*'\1' i))))))  ;some lines end with space, -- there may be only 1 char: "002.1 Paratifo A"
+
+(defun load-ht (h f) ;file
+	(with-open-file (s f)
+		(loop for i = (read-line s nil) 
+					while i do 
+					(setf (gethash (icd:key i) h) (#~s'.*(.\S)\s*'\1' i)))))  ;some lines end with space, -- there may be only 1 char: "002.1 Paratifo A"
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;,
+
 ;
 ;insert garantee 2 bars, here garantee 1 and only 1 bar    <------- see  (count-if (lambda (x) (/= 2 x)) (bars-in-entries "icdtreetest")) ; 1654  in zuBehalten
 ;
@@ -222,11 +225,14 @@
       (if (find #\| item) (rm-nsb item)))))
 
 (defun connect-first2lines-if- (i) (#~s'(?<!\d)-\n\s*'' i))
+;(defun connect-first2lines-if- (i) (#~s'(?<!\d)-\s*\n\s*'' i))  ; geht nicht besser
+
+
 (defun defoffbar (i) "default code bar, on end of item" (rm-nsb (#~s'$'|' i))) ; 534.91 ULCERA GASTRODIGIUNALE NON  SPECIFICATA  <--- das ist der einzige space für das rm-nsb hier gebraucht wird
 ;(defun defoffbar (i) "default code bar, on end of item" (#~s'$'|' i))  ; ev use this later, to simplify
 (defun defmanbar (i) "default header bar, on end of 1. line" (#~s'\n'|' i))
 
-(defun load-ht (ht lst)
+#;(defun load-ht (ht lst)
   (mapc (lambda (i)
           (setf (gethash (key i) ht) i))
         lst))
@@ -234,12 +240,49 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;(defun insert-hash-controlled-bar% (i c &aux (p (length c))) (lol:mkstr (subseq i 0 p) #\| (subseq i p)))
 ; nil as return-value of gethash is a valid parameter for lenght
-(defun insert-hash-controlled-bar% (i c &aux (p (length c))) (unless (eq c nil) (lol:mkstr (subseq i 0 p) #\| (subseq i p))))  ; ev use stringp
+(defun insert-hash-controlled-bar% (i c &aux (p (length c))) 
+(unless (eq c nil) (lol:mkstr (subseq i 0 p) #\| (subseq i p))))  ; ev use stringp
+
+(defun insert-hash-controlled-bar% (i c &aux (p (length c))) 
+(and (stringp c) (>= (length i) (length c))
+(lol:mkstr (subseq i 0 p) #\| (subseq i p))))  ; ev use stringp
 (defun insert-hash-controlled-bar (i h) (insert-hash-controlled-bar% i (gethash (key i) h)))
+
 
 (defun default-code-bar (i) "default code bar, on end of item" (rm-nsb (#~s'$'|' i)))
 (defun default-head-bar (i) "default header bar, on end of 1. line" (#~s'\n'|' i))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun codep (k l)
+(member k l :test 'string=))
+
+;(codep "99.04" codes-th)
+
+(defparameter codes-dg
+(with-open-file (i "~/Programming/Projects/IcdIt2007/icd9cm_24.csv")
+(loop for l = (read-line i nil) while l collect (icd:key l))))
+
+(defparameter codes-th
+(with-open-file (i "~/Programming/Projects/IcdIt2007/icd9cm_24Interventi.csv")   
+(loop for l = (read-line i nil) while l collect (icd:key l))))
+
+;ev include
+;(defparameter *new-codes* 
+;'("531.0" "531.1" "531.2" "531.3" "531.4" "531.5" "531.6" "531.7" "531.9"  ...))
+ 
+
+;ev  statt headerp
+;(if (not (codep k codes-th)
+;....)
+
+;what is a conde?  ---> an entry in csv or complete code
+; ev only lines: eg:
+
+; 003, 004 :default -> end of 1. line
+; 639 - 2 lines
+
+;(defparameter *man-ht* '(
+;"1. MALATTIE INFETTIVE E PARASSITARIE (001-139)"
+
 
 ;------------
 ;WORKFLOW 5 complete-items
@@ -323,6 +366,18 @@
             (funcall (o:ttrav #'cons (lambda (stg) (if (stringp stg) (#~s'[^|]+\|'' stg) stg)))
                      (with-open-file (i "temp1") (make-tree i))))))
 
+(defun create-lisptree-file (infile outfile)
+  "edit a copy of the perl array file"
+  (clesh:script (format nil "sed '1,2d; $d; s/,$//' ~a > temp1" infile))
+  (with-open-file (o outfile :direction :output :if-does-not-exist :create :if-exists :supersede)
+    (format o "~s" 
+
+            (funcall (o:ttrav #'cons (lambda (stg) (if (stringp stg) (#~s'[^|]+\|'' stg) stg)))
+                  (list (cons "|icd|"   (with-open-file (i "temp1") (make-tree i))))))))
+;                  (list (cons "|dummy"   (with-open-file (i "temp1") (make-tree i))))))))
+
+
+;    (list "icd|"
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 @END
 
@@ -466,5 +521,32 @@
               ;
               ;              (fare-utils:acond ((ppcre:scan-to-strings "^\\d{2}(?=\\|\\d{1,2}\\. )" x) (setf h1 (format nil "~a." fare-utils:it)) x)  
 ;              (pre:ifmatch (#~m/"^\\d{2}(?=\\|\\d{1,2}\\. )"/ x) 
+
+; get the length of code
+(defun insert-hash-controlled-bar (i h) 
+(let ((stringlength (gethash (key i) h)))
+
+
+(insert-hash-controlled-bar% i (gethash (key i) h)))
+
+;usage:  (icd::aftl '(1 2 3) (#'1+ #'1+))
+;(defmacro aftl (lst fns)
+;analog: mapcar fn lst
+#;(defmacro aftl (fns lst)
+  "for apply functions to list"
+  `(mapcar (stdutils:compose ,@fns) ,lst))
+
+#;(defun key (line)
+	  "return the key of an entry" ;(key "123 CodeText") ; "123"
+	  (subseq line 0 (position #\space line)))
+
+; 10.11.13
+; from icd9
+;(defun afts (strg fns)
+#;(defun afts (fns strg)
+  "for apply functions to scalar"
+    (eval `(funcall (stdutils:compose ,@fns) ,strg)))
+
+
 
 
