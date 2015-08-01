@@ -14,12 +14,12 @@
   (icd:create-perlarry-file-all (icd9dg::pdf-to-items) 
                             (icd9th::pdf-to-items)
 ;                            "~/Programming/Projects/IcdIt2007/dataDgTh1"))
-                            "~/src/lisp/icd9it-pdf/data/dataDgTh37"))
+                            "~/src/lisp/icd9it-pdf/data/dataDgTh40"))
 
 
 
 (defun perlarray-to-lisptree ()
-  (icd:create-lisptree-file "~/src/lisp/icd9it-pdf/data/dataDgTh34" 
+  (icd:create-lisptree-file "~/src/lisp/icd9it-pdf/data/dataDgTh35" 
                             "~/src/lisp/icd9it-pdf/data/dataIcd9itLisp3"))
 
 

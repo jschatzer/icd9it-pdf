@@ -65,7 +65,7 @@
 (defparameter *hbar3* '("33.7" "35.6" "90.4" "91.3" "91.4" "96.4" "99.7")) 
 (defparameter *hbar4* '("37.7")) 
 
-(defparameter *cbar2* '())
+(defparameter *cbar2* '("52.11" "96.72"))
 (defparameter *cbar3* '())
 
 ;------------

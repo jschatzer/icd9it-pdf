@@ -18,5 +18,5 @@
                (:file "diagnosi")
                (:file "interventi")
                (:file "icd9it-pdf")
-;               (:file "tests")
+;;;;;;               (:file "tests")
                ))

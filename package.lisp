@@ -26,6 +26,8 @@
 reduce-space
 reduce-space-first-line
    ;W4
+	 code-bar
+	 header-bar
    #:load-ht
    #:connect-first2lines-if-
    #:defoffbar
