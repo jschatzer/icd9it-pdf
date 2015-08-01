@@ -20,7 +20,7 @@
 ;WORKFLOW 2 pages-to-column
 ;------------
 (defun pages-to-column (lst)
-   (stdutils:list-to-delimited-string (icd:aftl (#'icd:split-page #'edit-single-page #'edit-single-page2 #'icd:pad-text) lst)))
+   (stdutils:list-to-delimited-string (mapcar (stdutils:compose #'icd:split-page #'edit-single-page #'edit-single-page2 #'icd:pad-text) lst)))
 
 (defun edit-single-page (page) (icd:edit-single-page-helper page *tagged-entries*))
 
@@ -59,7 +59,7 @@
 ;WORKFLOW 6 tune items
 ;------------
 (defun tune-items (lst)
-  (icd:aftl (#'longcode #'grklammer #'icd:accented-chrs) lst))
+  (mapcar (stdutils:compose #'longcode #'grklammer #'icd:accented-chrs) lst))
 
 (defun grklammer (item)
   (icd:afts (icd:grklammer-fns *grkl*) item))
@@ -70,8 +70,7 @@
 ;------------
 ;;WORKFLOW 7 insert-path
 ;------------
-(defun insert-path (lst)
-  (funcall (stdutils:compose #'icd:insert-h1 #'icd:insert-key) lst))
+(defun insert-path (lst) (icd:insert-h1 (icd:insert-key lst)))
 
 ;------------
 ;WORKFLOW 8 create-perlarry-file
@@ -180,3 +179,12 @@
 				(t (#~s'\n'|' i))))
 
 ;(defun insert-bar (i) (or (code-bar i) (header-bar i)))
+(defun tune-items (lst)
+  (icd:aftl (#'longcode #'grklammer #'icd:accented-chrs) lst))
+
+#;(defun pages-to-column (lst)
+   (stdutils:list-to-delimited-string (icd:aftl (#'icd:split-page #'edit-single-page #'edit-single-page2 #'icd:pad-text) lst)))
+#;(defun insert-path (lst)
+  (funcall (stdutils:compose #'icd:insert-h1 #'icd:insert-key) lst))
+
+

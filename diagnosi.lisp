@@ -20,7 +20,7 @@
 ;WORKFLOW 2 pages-to-column
 ;------------
 (defun pages-to-column (lst)
-  (stdutils:list-to-delimited-string (icd:aftl (#'icd:split-page #'edit-single-page #'icd:pad-text) (c655.2 lst))))
+  (stdutils:list-to-delimited-string (mapcar (stdutils:compose #'icd:split-page #'edit-single-page #'icd:pad-text) (c655.2 lst))))
 
 (defun edit-single-page (page)
   "reduce spaces between key and text, to enable page-splitting"
@@ -62,7 +62,7 @@
 ;WORKFLOW 6 tune-items
 ;------------
 (defun tune-items (lst)
-  (icd:aftl (#'icd:accented-chrs #'grklammer #'longcode1 #'longcode2) lst))
+  (mapcar (stdutils:compose #'icd:accented-chrs #'grklammer #'longcode1 #'longcode2) lst))
 
 (defun grklammer (item)
   (icd:afts (icd:grklammer-fns *grkl*) item))
@@ -93,8 +93,7 @@
 ;WORKFLOW 7 insert-path
 ;------------
 ; chapt 4 u 14 haben keine h2
-(defun insert-path (lst)
-  (funcall (stdutils:compose #'icd:insert-h1 #'insert-h2a #'insert-h2 #'icd:insert-key) lst))
+(defun insert-path (lst) (icd:insert-h1 (insert-h2a (insert-h2 (icd:insert-key lst)))))
 
 (defun insert-h2 (lst)
   (let ((h2 ""))
@@ -218,5 +217,13 @@
 
 
 
+
+#;(defun pages-to-column (lst)
+  (stdutils:list-to-delimited-string (icd:aftl (#'icd:split-page #'edit-single-page #'icd:pad-text) (c655.2 lst))))
+
+(defun tune-items (lst)
+  (icd:aftl (#'icd:accented-chrs #'grklammer #'longcode1 #'longcode2) lst))
+#;(defun insert-path (lst)
+  (funcall (stdutils:compose #'icd:insert-h1 #'insert-h2a #'insert-h2 #'icd:insert-key) lst))
 
 

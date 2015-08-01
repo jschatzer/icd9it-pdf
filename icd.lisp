@@ -19,7 +19,7 @@
 ;geht nicht -- wieso??
 ;(defmacro afts (fns stg) "for apply functions to scalar" `(funcall (stdutils:compose ,@fns) ,stg))
 (defun afts (fns stg) "for apply functions to scalar" (eval `(funcall (stdutils:compose ,@fns) ,stg)))
-(defmacro aftl (fns lst) "for apply functions to list" `(mapcar (stdutils:compose ,@fns) ,lst))
+
 (defun key (s) "return the key of an entry" (#~s'\s.*''s s)) ;(key "123 CodeText") ; "123"
  
 (defun re-fns (alist &key m)
@@ -569,4 +569,4 @@
 						while i do 
 						(setf (gethash (icd:key i) code-ht) (#~s'.*(.\S)\s*'\1' i))))))  ;some lines end with space, -- there may be only 1 char: "002.1 Paratifo A"
 
-
+(defmacro aftl (fns lst) "for apply functions to list" `(mapcar (stdutils:compose ,@fns) ,lst))
