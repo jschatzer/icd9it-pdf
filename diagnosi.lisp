@@ -67,6 +67,37 @@
 (defun grklammer (item)
   (icd:afts (icd:grklammer-fns *grkl*) item))
 
+#|
+;;;;;;;;;;;;;;;;;;;;
+;draft
+#;(defun grklammer (i)
+	(dolist (x *grkl* i)
+		(setf i (if (string= (car x) (key i)) (#~s/"(?<=\\|).*"/(cdr x)/s i)))))
+
+#;(defun re% (al re)
+	(dolist (x al i)
+		(setf i (if (string= (car x) (key i)) (#~s/re/(cdr x)/s i)))))
+
+#;(defmacro re% (al re)
+	`(dolist (x ,al i)
+		(setf i (if (string= (car x) (key i)) (#~s/,re/(cdr x)/s i)))))
+|#
+
+;;; könnnte gehen
+#;(defun re% (al re i)
+	(dolist (x al i)
+		(setf i (if (string= (car x) (icd:key i)) (#~s/re/(cdr x)/s i)))))
+
+
+#;(defun grklammer (i)
+  (re% *grkl* "(?<=\\|).*" i))
+
+;;;;;;;;
+
+
+
+
+
 (defun longcode1 (item)
   (icd:afts (icd:longcode-fns *longcode*) item))
 
@@ -117,18 +148,6 @@
 ;WORKFLOW 8 create-perlarry-file
 ;------------
 
-;benchmark
-(defun benchmark-diagnosi ()
-;(time (o:p pdf-to-pages (icd9dg::pdf-to-pages "Diagnosi.pdf" icd9dg::*chapters* 20)))
-(time (o:p pdf-to-pages (icd:pdf-to-pages "Diagnosi.pdf" icd9dg::*chapters* 20)))
-(time (o:p pages-to-column (icd9dg::pages-to-column pdf-to-pages)))
-(time (o:p column-to-items (icd9dg::column-to-items pages-to-column)))
-(time (o:p mark-comments (icd9dg::mark-comments column-to-items)))
-(time (o:p complete-code (icd9dg::complete-code mark-comments)))
-(time (o:p tune-items (icd9dg::tune-items complete-code)))
-(time (o:p insert-path (icd9dg::insert-path tune-items)))
-)
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; ad testfile
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -170,6 +189,19 @@
         (column-to-items   ;W3
           (pages-to-column     ;W2
             (icd:pdf-to-pages "Diagnosi.pdf" *chapters* chapter))))))) ;W1
+
+;benchmark
+(defun benchmark-diagnosi ()
+;(time (o:p pdf-to-pages (icd9dg::pdf-to-pages "Diagnosi.pdf" icd9dg::*chapters* 20)))
+(time (o:p pdf-to-pages (icd:pdf-to-pages "Diagnosi.pdf" icd9dg::*chapters* 20)))
+(time (o:p pages-to-column (icd9dg::pages-to-column pdf-to-pages)))
+(time (o:p column-to-items (icd9dg::column-to-items pages-to-column)))
+(time (o:p mark-comments (icd9dg::mark-comments column-to-items)))
+(time (o:p complete-code (icd9dg::complete-code mark-comments)))
+(time (o:p tune-items (icd9dg::tune-items complete-code)))
+(time (o:p insert-path (icd9dg::insert-path tune-items)))
+)
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 @END

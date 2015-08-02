@@ -14,7 +14,7 @@
   (icd:create-perlarry-file-all (icd9dg::pdf-to-items) 
                             (icd9th::pdf-to-items)
 ;                            "~/Programming/Projects/IcdIt2007/dataDgTh1"))
-                            "~/src/lisp/icd9it-pdf/data/dataDgTh43"))
+                            "~/src/lisp/icd9it-pdf/data/dataDgTh45"))
 
 
 

@@ -17,12 +17,23 @@
 			(unless (equal val g) (values val t)))))
 
 ;geht nicht -- wieso??
-;(defmacro afts (fns stg) "for apply functions to scalar" `(funcall (stdutils:compose ,@fns) ,stg))
+
+; beide idem, gehen nicht richtig
+;(defmacro afts (fns stg) `(funcall (stdutils:compose ,@fns) ,stg))
+;(defmacro afts (fns stg) `(funcall ,(cons 'stdutils:compose fns) ,stg))
+
+;diese gehen
+;orig
 (defun afts (fns stg) "for apply functions to scalar" (eval `(funcall (stdutils:compose ,@fns) ,stg)))
+;(defmacro afts (fns stg) `(funcall ,(cons 'stdutils:compose (eval fns)) ,stg))
+;(defmacro afts (fns stg) `(let ((fs ,fns)) `(funcall (stdutils:compose ,@fs) ,,stg)))
+;(defmacro afts (fns stg) ``(let ((fs ,,fns)) (funcall (stdutils:compose ,@fs) ,,stg)))
+;(defmacro afts (fns stg) `(let ((fs (eval ,fns))) `(funcall (stdutils:compose ,@fs) ,,stg)))
+
 
 (defun key (s) "return the key of an entry" (#~s'\s.*''s s)) ;(key "123 CodeText") ; "123"
  
-(defun re-fns (alist &key m)
+#;(defun re-fns (alist &key m)
   "return a list of string-replace-functions, i.e reg expr functions,
   they want a string as input
   geht mit multiline und singlelinemode, do :m t"
@@ -32,6 +43,20 @@
                 (ppcre:regex-replace-all (ppcre:create-scanner (car alist-elt) :multi-line-mode t :single-line-mode t) strg (cdr alist-elt) :simple-calls t)
                 (ppcre:regex-replace-all (car alist-elt) strg (cdr alist-elt) :simple-calls t))))
           alist))
+
+;2.8.15 implement s///e modifier in perlre, scheint zu gehen
+(defun re-fns (alist &key m)
+	"return a list of string-replace-functions, i.e reg expr functions,
+	they want a string as input
+	geht mit multiline und singlelinemode, do :m t"
+	(mapcar (lambda (alist-elt)
+						(lambda (strg)
+							(if m
+								(#~s/(car alist-elt)/(cdr alist-elt)/gems strg)
+								(#~s/(car alist-elt)/(cdr alist-elt)/ge strg))))
+					alist))
+
+
 
 ; ev use o:re-fns, ev function als arg überlegen <--- 
 (defun s-fns (alist) 
@@ -83,16 +108,10 @@
 ;------------
 ;WORKFLOW 1 pdf-to-pages
 ;------------
-#;(defun pdf-to-pages (pdf lst ch)
- "convert a single or all chapters (use 20) to a list of pages"
-  (let ((range (eval `(case ,ch ,@lst))))
-    (funcall (stdutils:compose #'split-into-pages #'trim-text) (pdf-to-txt pdf (car range) (cdr range)))))
-
 (defun pdf-to-pages (pdf lst &optional (ch 20))
  "convert a single or all chapters (use 20) to a list of pages"
   (let ((range (eval `(case ,ch ,@lst))))
     (funcall (stdutils:compose #'split-into-pages #'trim-text) (pdf-to-txt pdf (car range) (cdr range)))))
-
 
 (defun pdf-to-txt (pdf-file from to)
   "create text from Pdf from-page to-page"
@@ -139,6 +158,12 @@
 
 (defun optimize-text (strg)
   (afts (re-fns *rm-ts-el* :m t) (afts (re-fns *opt-txt*) strg)))
+
+;geht nicht
+#;(defun optimize-text (strg)
+  (re% *rm-ts-el* (re% *opt-txt* strg)))
+
+
 
 (defun uc-header (strg)
   "remove linebreaks from upper case header"
@@ -215,7 +240,16 @@
 ;WORKFLOW 6 tune items
 ;------------
 (defun accented-chrs (item)
-  (afts (re-fns *acc-chrs*) item)) 
+ (afts (re-fns *acc-chrs*) item)) 
+
+;;;;;;;; das geht auch ;;;;;;;;;;;;;;;;;;;;;;
+#;(defun accented-chrs (i) (re% *acc-chrs* i))
+; das geht
+#;(defun re% (al i)
+	(dolist (x al i)
+		(setf i (#~s/(car x)/(cdr x)/g i))))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 
 (defun grklammer-fns (alist) 
   (mapcar (lambda (ai) ; alist-item
@@ -244,6 +278,13 @@
 (defun k2n (k)
   "key to node[s]"
   (afts (re-fns *re-ikey*) k))
+
+;geht nicht
+#;(defun k2n (k)
+  "key to node[s]"
+;  (afts (re-fns *re-ikey*) k))
+(re%  *re-ikey* k))
+
 
 ;damit point idem wie h2, in h2 notwendig
 (defun insert-h1 (lst)
@@ -570,3 +611,10 @@
 						(setf (gethash (icd:key i) code-ht) (#~s'.*(.\S)\s*'\1' i))))))  ;some lines end with space, -- there may be only 1 char: "002.1 Paratifo A"
 
 (defmacro aftl (fns lst) "for apply functions to list" `(mapcar (stdutils:compose ,@fns) ,lst))
+
+#;(defun pdf-to-pages (pdf lst ch)
+ "convert a single or all chapters (use 20) to a list of pages"
+  (let ((range (eval `(case ,ch ,@lst))))
+    (funcall (stdutils:compose #'split-into-pages #'trim-text) (pdf-to-txt pdf (car range) (cdr range)))))
+
+

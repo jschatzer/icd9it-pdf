@@ -43,7 +43,8 @@
   ("cioe" . "cioè")
   ("se stessi" . "sé stessi") ; V62
   ("ne trattamento" . "né trattamento")  ;V68.81
-  ("perche" . "perché")
+;  ("perche" . "perché")
+  ("(?<!\w)perche" . "perché")    ; Iperchératosi
   ("purche" . "purché") ;  391
   ("nonche" . "nonché") ; 16.
   ("Sezary" . "Sézary") ;   ;d 202.24
@@ -78,7 +79,10 @@
   ("^(\\d{2,3}\\.\\d)(\\d)$" . "\\1.\\2") ; transform [0]12.34 to [0]12.3.4 - geht für dg u th
   ("^(\\d{2,3}\\.?\\d?)$" . "\\1") ; 12 123 12.3 123.4 --> to itself                          
   ("^.(...)-(...).$" . "\\1\\2") ; (123-456)  --> 123456                                      
-  ("^(\\d{1,2})\\.$" . pad-h1)))  ; 1. --> 01 and 11. --> 11, siehe cll
+  ("^(\\d{1,2})\\.$" . pad-h1)
+;  ("^(\\d{1,2})\\.$" . 'pad-h1) ; geht nicht
+;  ("^(\\d{1,2})\\.$" . #'pad-h1)     ;, mit s///e   <-------2.8.15
+	))  ; 1. --> 01 and 11. --> 11, siehe cll
 
 (defun pad-h1 (s r)
   (declare (ignore s))
