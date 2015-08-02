@@ -33,18 +33,6 @@
 
 (defun key (s) "return the key of an entry" (#~s'\s.*''s s)) ;(key "123 CodeText") ; "123"
  
-#;(defun re-fns (alist &key m)
-  "return a list of string-replace-functions, i.e reg expr functions,
-  they want a string as input
-  geht mit multiline und singlelinemode, do :m t"
-  (mapcar (lambda (alist-elt)
-            (lambda (strg)
-              (if m
-                (ppcre:regex-replace-all (ppcre:create-scanner (car alist-elt) :multi-line-mode t :single-line-mode t) strg (cdr alist-elt) :simple-calls t)
-                (ppcre:regex-replace-all (car alist-elt) strg (cdr alist-elt) :simple-calls t))))
-          alist))
-
-;2.8.15 implement s///e modifier in perlre, scheint zu gehen
 (defun re-fns (alist &key m)
 	"return a list of string-replace-functions, i.e reg expr functions,
 	they want a string as input
@@ -55,8 +43,6 @@
 								(#~s/(car alist-elt)/(cdr alist-elt)/gems strg)
 								(#~s/(car alist-elt)/(cdr alist-elt)/ge strg))))
 					alist))
-
-
 
 ; ev use o:re-fns, ev function als arg überlegen <--- 
 (defun s-fns (alist) 
@@ -85,6 +71,8 @@
 ;(defun reduce-space (i) "33   Altri interventi - there are often 3-4 spaces between key and text" (#~s'\s+' ' i))  ; ev use this in completet chords
 
 
+;from  
+;http://groups.google.com/group/comp.lang.lisp/browse_frm/thread/c7610a7f89419c0b/5ddd667e717b4b99#5ddd667e717b4b99  -- Michael Kappert
 (defun make-tree (f &optional (node-key ""))
   "make tree from txt-file, cll"  ; insert url
 	(loop
@@ -158,12 +146,6 @@
 
 (defun optimize-text (strg)
   (afts (re-fns *rm-ts-el* :m t) (afts (re-fns *opt-txt*) strg)))
-
-;geht nicht
-#;(defun optimize-text (strg)
-  (re% *rm-ts-el* (re% *opt-txt* strg)))
-
-
 
 (defun uc-header (strg)
   "remove linebreaks from upper case header"
@@ -279,13 +261,6 @@
   "key to node[s]"
   (afts (re-fns *re-ikey*) k))
 
-;geht nicht
-#;(defun k2n (k)
-  "key to node[s]"
-;  (afts (re-fns *re-ikey*) k))
-(re%  *re-ikey* k))
-
-
 ;damit point idem wie h2, in h2 notwendig
 (defun insert-h1 (lst)
   (let ((h1 ""))
@@ -338,283 +313,3 @@
 ;    (list "icd|"
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 @END
-
-#;(defun create-lisptree-file% (file)
-  "edit a copy of the perl array file"
-  (clesh:script (format nil "sed '1,2d; $d; s/,$//' ~a > temp1" file)))
-
-#;(defun create-lisptree-file (infile outfile) ;("temp1" "icdtreetest") ;;;;--->>"IcdIt9with2bars.data")
-  (with-open-file (o outfile :direction :output :if-does-not-exist :create :if-exists :supersede)
-    (format o "~s" 
-      (with-open-file (i infile) (make-tree i)))))
-
-(defun create-lisptree-file (infile outfile) ;("temp1" "icdtreetest") ;;;;--->>"IcdIt9with2bars.data")
-  "edit a copy of the perl array file"
-(clesh:script (format nil "sed '1,2d; $d; s/,$//' ~a > temp1" infile))
-  (with-open-file (o outfile :direction :output :if-does-not-exist :create :if-exists :supersede)
-    (format o "~s" 
-;      (with-open-file (i infile) (make-tree i)))))
-      (with-open-file (i "temp1") (make-tree i)))))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;, remove path
-(defun create-lisptree-file (infile outfile) ;("temp1" "icdtreetest") ;;;;--->>"IcdIt9with2bars.data")
-  "edit a copy of the perl array file"
-(clesh:script (format nil "sed '1,2d; $d; s/,$//' ~a > temp1" infile))
-  (with-open-file (o outfile :direction :output :if-does-not-exist :create :if-exists :supersede)
-    (format o "~s" 
-;            (subst-if t (#~s'[^|]|'' 
-
-;(o:walk-tree-atoms (lambda (x) (#~s'[^|]|'' x))      ; The value NIL is not of type STRING
-;(o:walk-tree-atoms (lambda (x) (unless (eq x nil) (#~s'[^|]+\|'' x)))
-;(o:walk-tree (lambda (x) (and (atom x) (not (eq x nil))) (#~s'[^|]+\|'' x))
-;(o:walk-tree-atoms (lambda (x) (unless (eq x nil) (setf x (#~s'[^|]+\|'' x))))
-
-(funcall (o:ttrav #'cons (lambda (stg) (if (stringp stg) (#~s'[^|]+\|'' stg) stg)))
-  (with-open-file (i "temp1") (make-tree i))))))
-
-
-
-;(o:p replace-string (o:ttrav #'cons (lambda (stg)
-;                                      (if (stringp stg) (#~s'(.+\|.+\|.+)\|(.*)$'\1\2's stg) stg))))
-
-;(funcall replace-string lst)
-
-
-@END
-#;(defun edit-single-page-helper (page reg-lst)
-  (dolist (regex reg-lst page)
-    (destructuring-bind (code text) (ppcre:split "\\s+" regex :limit 2)
-             (setf page (ppcre:regex-replace (format nil "(~a)\\s{3,}(~a)" code text) page  "\\1 \\2")))))
-
-
-
-; 8.7.15 functions gehen nicht mit modifier!! perlre
-#;(defun uc-header (strg)
-  "remove linebreaks from upper case header"
-  (let ((regex1 "\\s*\\n\\s*(?=\\([\\dV]?\\d\\d-[\\dV]?\\d\\d\\))|\\s*\\n\\s*(?=\\(00\\))") ;alternative is only for chapt 0 interventi
-        (lookbehind "(?<!ECHO)(?<!NIA)(?<! [ABC])(?<![a-z]')(?<! DNA)(?<!IV)(?<!II)(?<!- I)(?<!SAI)(?<=[A-Z,'])")
-        (regex2 "\\s*-?\\n\\s*(?=[A-Z,'])"))
-    (#~s'CON NETTIVO'CONNETTIVO' (#~s/(format nil "~a~a|~a~a" lookbehind regex1 lookbehind regex2)/" "/gm strg))))
-
-#;(defun uc-header (strg)
-  "remove linebreaks from upper case header"
-(#~s'CON NETTIVO'CONNETTIVO'
-  (let ((regex1 "\\s*\\n\\s*(?=\\([\\dV]?\\d\\d-[\\dV]?\\d\\d\\))|\\s*\\n\\s*(?=\\(00\\))") ;alternative is only for chapt 0 interventi
-        (lookbehind "(?<!ECHO)(?<!NIA)(?<! [ABC])(?<![a-z]')(?<! DNA)(?<!IV)(?<!II)(?<!- I)(?<!SAI)(?<=[A-Z,'])")
-        (regex2 "\\s*-?\\n\\s*(?=[A-Z,'])"))
-    (#~s/(format nil "~a~a|~a~a" lookbehind regex1 lookbehind regex2)/" "/gm strg))))
-
-
-
-#;(defun tag-items (lst strg)
-  "return a tagged string"
-  (flet ((fns ()
-           (mapcar (lambda (x)
-                     (lambda (s)
-                       (if (eql :h2 (car x)) ;in case of h2 also invert text and key
-                         (#~s/(cadr x)/"§\\2 \\1"/gm s)
-                         (#~s/(cadr x)/"§\\1"/gm s))))
-                   lst)))
-    (eval `(funcall (stdutils:compose ,@(fns)) ,strg))))
-
-
-
-; ev make a fork in git
-; 8.7.15 damit scheint mark comments besser zu gehen, es werden viel merhr bars inseriert <-----
-#;(defun uc-header (strg)
-  "remove linebreaks from upper case header"
-  (let ((regex1 "\\s*\\n\\s*(?=\\([\\dV]?\\d\\d-[\\dV]?\\d\\d\\))|\\s*\\n\\s*(?=\\(00\\))") ;alternative is only for chapt 0 interventi
-        (lookbehind "(?<!ECHO)(?<!NIA)(?<! [ABC])(?<![a-z]')(?<! DNA)(?<!IV)(?<!II)(?<!- I)(?<!SAI)(?<=[A-Z,'])")
-        (regex2 "\\s*-?\\n\\s*(?=[A-Z,'])"))
-    (ppcre:regex-replace "CON NETTIVO"
-      (ppcre:regex-replace-all (ppcre:create-scanner (format nil "~a~a|~a~a" lookbehind regex1 lookbehind regex2) :multi-line-mode t) strg " ")
-      "CONNETTIVO")))
-
-;    (#~s'CON NETTIVO'CONNETTIVO' (#~s/(ppcre:create-scanner (format nil "~a~a|~a~a" lookbehind regex1 lookbehind regex2) :multi-line-mode t)//g strg))))
-;
-;    (#~s'CON NETTIVO'CONNETTIVO' (#~s/(format nil "~a~a|~a~a" lookbehind regex1 lookbehind regex2)/""/gm strg))))
-
-#;(defun tag-items (lst strg)
-  "return a tagged string"
-  (flet ((fns ()
-           (mapcar (lambda (x)
-                     (lambda (s)
-                       (if (eql :h2 (car x)) ;in case of h2 also invert text and key
-                         (ppcre:regex-replace-all (ppcre:create-scanner (cadr x) :multi-line-mode t) s "§\\2 \\1")
-                         (ppcre:regex-replace-all (ppcre:create-scanner (cadr x) :multi-line-mode t) s "§\\1"))))
-                   lst)))
-    (eval `(funcall (stdutils:compose ,@(fns)) ,strg))))
-
-#;(defun grklammer-fns (alist) 
-  (mapcar (lambda (ai) ; alist-item
-            (lambda (item)
-              (if (string= (car ai) (key item)) 
-                (ppcre:regex-replace (ppcre:create-scanner "(?<=\\|).*" :single-line-mode t) item (cdr ai))
-                item)))
-          alist))
-
-
-
-#;(defun longcode-fns (alist) 
-  (mapcar (lambda (ai) ; alist-item
-            (lambda (strg)
-              (if (ppcre:scan (format nil "^~a\\d" (car ai)) strg)
-                (ppcre:regex-replace (cdr ai) strg "")
-                strg)))
-          alist))
-
-#;(defun insert-h1 (lst)
-  (let ((h1 ""))
-    (mapcar (lambda (x)
-              ; match 01|1. text  - i.e. 2 digits, bar, 1-2 digits, period and space, (h2i does match 01| too)
-              (fare-utils:acond ((ppcre:scan-to-strings "^\\d{2}(?=\\|\\d{1,2}\\. )" x) (setf h1 (format nil "~a." fare-utils:it)) x)  
-                       (t (lol:mkstr h1 x))))
-            lst)))
-
-
-              ; match 01|1. text  - i.e. 2 digits, bar, 1-2 digits, period and space, (h2i does match 01| too)
-              ;
-              ;
-              ;              (fare-utils:acond ((ppcre:scan-to-strings "^\\d{2}(?=\\|\\d{1,2}\\. )" x) (setf h1 (format nil "~a." fare-utils:it)) x)  
-;              (pre:ifmatch (#~m/"^\\d{2}(?=\\|\\d{1,2}\\. )"/ x) 
-
-; get the length of code
-(defun insert-hash-controlled-bar (i h) 
-(let ((stringlength (gethash (key i) h)))
-
-
-(insert-hash-controlled-bar% i (gethash (key i) h)))
-
-;usage:  (icd::aftl '(1 2 3) (#'1+ #'1+))
-;(defmacro aftl (lst fns)
-;analog: mapcar fn lst
-#;(defmacro aftl (fns lst)
-  "for apply functions to list"
-  `(mapcar (stdutils:compose ,@fns) ,lst))
-
-#;(defun key (line)
-	  "return the key of an entry" ;(key "123 CodeText") ; "123"
-	  (subseq line 0 (position #\space line)))
-
-; 10.11.13
-; from icd9
-;(defun afts (strg fns)
-#;(defun afts (fns strg)
-  "for apply functions to scalar"
-    (eval `(funcall (stdutils:compose ,@fns) ,strg)))
-
-
-
-;(defun key (line) "return the key of an entry" (subseq line 0 (position #\space line))) ;(key "123 CodeText") ; "123"
-
-(defun key-from-bar-all (line)
-  "return the key from 1.bar to space, >with< points, parenthesis and slash"
-  (subseq line (1+ (position #\| line)) (position #\space line)))
-
-;
-;
-(defun bar-h (item ht fn)
-  "official hash-controlled bar insertion"
-  (if (gethash (key item) ht)
-    (lol:aif (ctrbar item (accs-to-chrs (gethash (key item) ht)))
-      lol:it
-      (funcall fn item))))
-
-(defun accs-to-chrs (strg)
- (eval `(funcall (stdutils:compose ,@(s-fns *ac*)) ,strg)))
-
-(defun ctrbar (strg ctrl)
-  "returns a string with a bar or nil, if there is no bar in the string"
-  (flet ((eoltest (line)
-           (if (< (length ctrl) (length (subseq line (position-if #'stdutils:constituent line))))
-             line
-             (if (string-equal
-                  (subseq line (position-if #'stdutils:constituent line))
-                  (subseq ctrl (- (length ctrl) (length (subseq line (position-if #'stdutils:constituent line))))))
-               (#~s'$'|' line)
-               line))))
-    (let ((item (format nil "~{~&~a~}" (mapcar #'eoltest (ppcre:split "\\n" strg)))))
-      (if (find #\| item) (rm-nsb item)))))
-
-(defun connect-first2lines-if- (i) (#~s'(?<!\d)-\n\s*'' i))
-;(defun connect-first2lines-if- (i) (#~s'(?<!\d)-\s*\n\s*'' i))  ; geht nicht besser
-
-
-
-;(defun defoffbar (i) "default code bar, on end of item" (#~s'$'|' i))  ; ev use this later, to simplify
-(defun defmanbar (i) "default header bar, on end of 1. line" (#~s'\n'|' i))
-
-#;(defun load-ht (ht lst)
-  (mapc (lambda (i)
-          (setf (gethash (key i) ht) i))
-        lst))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;(defun insert-hash-controlled-bar% (i c &aux (p (length c))) (lol:mkstr (subseq i 0 p) #\| (subseq i p)))
-; nil as return-value of gethash is a valid parameter for lenght
-(defun insert-hash-controlled-bar% (i c &aux (p (length c))) 
-(unless (eq c nil) (lol:mkstr (subseq i 0 p) #\| (subseq i p))))  ; ev use stringp
-
-(defun insert-hash-controlled-bar% (i c &aux (p (length c))) 
-(and (stringp c) (>= (length i) (length c))
-(lol:mkstr (subseq i 0 p) #\| (subseq i p))))  ; ev use stringp
-(defun insert-hash-controlled-bar (i h) (insert-hash-controlled-bar% i (gethash (key i) h)))
-
-
-(defun default-code-bar (i) "default code bar, on end of item" (rm-nsb (#~s'$'|' i)))
-(defun default-head-bar (i) "default header bar, on end of 1. line" (#~s'\n'|' i))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun codep (k l)
-(member k l :test 'string=))
-
-;(codep "99.04" codes-th)
-
-(defparameter codes-dg
-(with-open-file (i "~/Programming/Projects/IcdIt2007/icd9cm_24.csv")
-(loop for l = (read-line i nil) while l collect (icd:key l))))
-
-(defparameter codes-th
-(with-open-file (i "~/Programming/Projects/IcdIt2007/icd9cm_24Interventi.csv")   
-(loop for l = (read-line i nil) while l collect (icd:key l))))
-
-;ev include
-;(defparameter *new-codes* 
-;'("531.0" "531.1" "531.2" "531.3" "531.4" "531.5" "531.6" "531.7" "531.9"  ...))
- 
-
-;ev  statt headerp
-;(if (not (codep k codes-th)
-;....)
-
-;what is a conde?  ---> an entry in csv or complete code
-; ev only lines: eg:
-
-; 003, 004 :default -> end of 1. line
-; 639 - 2 lines
-
-;(defparameter *man-ht* '(
-;"1. MALATTIE INFETTIVE E PARASSITARIE (001-139)"
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;,
-
-;
-;insert garantee 2 bars, here garantee 1 and only 1 bar    <------- see  (count-if (lambda (x) (/= 2 x)) (bars-in-entries "icdtreetest")) ; 1654  in zuBehalten
-#;(defun mk-code-ht (n f) ;ht-name csv-file
-	(let ((code-ht (make-hash-table :test #'equal)))
-		(declare (special code-ht))
-		(with-open-file (s f)
-			(loop for i = (read-line s nil) 
-						while i do 
-						(setf (gethash (icd:key i) code-ht) (#~s'.*(.\S)\s*'\1' i))))))  ;some lines end with space, -- there may be only 1 char: "002.1 Paratifo A"
-
-(defmacro aftl (fns lst) "for apply functions to list" `(mapcar (stdutils:compose ,@fns) ,lst))
-
-#;(defun pdf-to-pages (pdf lst ch)
- "convert a single or all chapters (use 20) to a list of pages"
-  (let ((range (eval `(case ,ch ,@lst))))
-    (funcall (stdutils:compose #'split-into-pages #'trim-text) (pdf-to-txt pdf (car range) (cdr range)))))
-
-
